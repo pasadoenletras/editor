@@ -1,0 +1,1950 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Constructor 3 - Suite Escolar v34-INSTALACION</title>
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+
+  <script src="../instalacion.js"></script>
+  <style>
+    :root {
+      --editor-bg: #1e1e2f;
+      --editor-panel: #292943;
+      --editor-panel-2: #222238;
+      --editor-text: #f5f7fa;
+      --editor-muted: #aab2c0;
+      --editor-border: #464663;
+      --theme-color: #27AE60;
+      --theme-soft: #E8F5E9;
+      --danger: #e74c3c;
+      --warning: #f39c12;
+      --info: #3498db;
+      --surface: #ffffff;
+      --page-bg: #f4f6f7;
+      --text: #263238;
+      --shadow: 0 8px 25px rgba(0,0,0,0.12);
+    }
+
+    * { box-sizing: border-box; }
+    html, body { height: 100%; }
+    body {
+      margin: 0;
+      font-family: 'Nunito', sans-serif;
+      background: var(--page-bg);
+      color: var(--text);
+      opacity: 0;
+      transition: opacity .25s ease;
+      overflow: hidden;
+    }
+
+    #app { display: flex; height: 100vh; width: 100%; }
+
+    #sidebar {
+      width: 330px;
+      background: var(--editor-panel);
+      color: var(--editor-text);
+      display: flex;
+      flex-direction: column;
+      border-right: 1px solid var(--editor-border);
+      flex-shrink: 0;
+      z-index: 50;
+    }
+
+    .sidebar-header {
+      padding: 18px 18px 14px;
+      border-bottom: 1px solid var(--editor-border);
+      background: var(--editor-panel-2);
+    }
+    .sidebar-header h1 { font-size: 1.25rem; margin: 0 0 4px; }
+    .sidebar-header p { margin: 0; color: var(--editor-muted); font-size: .82rem; }
+
+    .sidebar-content { padding: 16px; overflow-y: auto; flex: 1; }
+    .group { border: 1px solid var(--editor-border); border-radius: 12px; padding: 14px; margin-bottom: 14px; background: rgba(255,255,255,0.025); }
+    .group h2 { font-size: .82rem; text-transform: uppercase; letter-spacing: .7px; margin: 0 0 12px; color: #75c8ff; }
+    label { display: block; font-size: .78rem; color: var(--editor-muted); font-weight: 800; margin: 10px 0 5px; text-transform: uppercase; letter-spacing: .4px; }
+    input[type="text"], input[type="url"], input[type="number"], select, textarea {
+      width: 100%; padding: 10px 11px; border-radius: 8px;
+      border: 1px solid var(--editor-border); background: #1b1b2b; color: white;
+      font-family: inherit; font-size: .92rem; outline: none;
+    }
+    textarea { min-height: 75px; resize: vertical; }
+    input:focus, select:focus, textarea:focus { border-color: var(--theme-color); box-shadow: 0 0 0 2px rgba(255,255,255,.06); }
+
+    .row { display: flex; gap: 8px; }
+    .row > * { flex: 1; }
+    .check-row { display: flex; justify-content: space-between; align-items: center; margin: 10px 0; gap: 10px; }
+    .check-row span { font-size: .9rem; color: #e8ebf0; }
+    .check-row input { width: 19px; height: 19px; }
+    .modal-body .check-row { background: #f2f6fb; border: 1px solid #cbd8e6; border-radius: 10px; padding: 10px 12px; margin: 10px 0; }
+    .modal-body .check-row span { color: #263238; font-weight: 900; letter-spacing: 0; }
+    .modal-body .check-row input { accent-color: var(--theme-color); }
+    .modal-body label { color: #34495e; }
+
+    .sidebar-actions {
+      padding: 12px;
+      border-top: 1px solid var(--editor-border);
+      background: var(--editor-panel-2);
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+    }
+
+    button { font-family: inherit; }
+    .btn {
+      border: none; border-radius: 9px; padding: 10px 12px;
+      cursor: pointer; font-weight: 800; transition: .18s ease; line-height: 1.1;
+      display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+    }
+    .btn:hover { transform: translateY(-1px); filter: brightness(1.04); }
+    .btn:active { transform: translateY(0); }
+    .btn-primary { background: var(--theme-color); color: #fff; }
+    .btn-secondary { background: #374151; color: #fff; }
+    .btn-info { background: var(--info); color: #fff; }
+    .btn-warning { background: var(--warning); color: #fff; }
+    .btn-danger { background: var(--danger); color: #fff; }
+    .btn-light { background: #eef2f7; color: #27313f; border: 1px solid #d8dee7; }
+    .btn-ghost { background: transparent; color: var(--editor-text); border: 1px solid var(--editor-border); }
+    .btn-sm { padding: 7px 9px; font-size: .82rem; border-radius: 8px; }
+    .btn-block { width: 100%; }
+
+    #canvas-area { flex: 1; overflow-y: auto; background: #e9edf2; }
+    #editor-preview { min-height: 100%; padding-bottom: 80px; }
+
+    .topbar-preview {
+      background: #2c3e50;
+      color: white;
+      padding: 10px 18px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 20px;
+      flex-wrap: wrap;
+      box-shadow: 0 3px 10px rgba(0,0,0,.18);
+    }
+    .topbar-preview .logo { height: 48px; max-width: 210px; object-fit: contain; }
+    .topbar-preview nav { display: flex; gap: 18px; align-items: center; flex-wrap: wrap; }
+    .topbar-preview a { color: white; text-decoration: none; font-size: .9rem; font-weight: 700; }
+    .topbar-preview .back-link { color: #ffde72; border-left: 1px solid rgba(255,255,255,.35); padding-left: 18px; }
+
+    .page-header {
+      background: var(--theme-color);
+      color: white;
+      padding: 38px 20px;
+      transition: background .25s ease;
+    }
+    .hero-inner {
+      max-width: 1100px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 24px;
+    }
+    .hero-inner.center { text-align: center; }
+    .hero-inner.img-top { flex-direction: column; text-align: center; }
+    .hero-text { flex: 1; min-width: 0; }
+    .hero-text h1 { margin: 0 0 8px; font-size: clamp(2rem, 4vw, 3rem); line-height: 1.05; }
+    .hero-text p { margin: 0; font-size: 1.15rem; opacity: .93; }
+    .hero-img { max-height: 150px; max-width: 190px; object-fit: contain; flex-shrink: 0; filter: drop-shadow(0 8px 12px rgba(0,0,0,.18)); }
+
+    .page-wrap { max-width: 1100px; margin: 0 auto; padding: 24px 20px 70px; }
+    .zone { margin-bottom: 22px; }
+    .zone-header { display: flex; justify-content: space-between; align-items: center; margin: 0 0 10px; }
+    .zone-title { font-size: .8rem; color: #617181; text-transform: uppercase; font-weight: 900; letter-spacing: .7px; }
+    .columns-grid { display: grid; gap: 22px; }
+    .col-card { background: #fff; border-radius: 14px; box-shadow: 0 3px 14px rgba(0,0,0,.07); border-top: 5px solid var(--theme-color); padding: 18px; min-height: 220px; }
+    .col-card.col-soft { background: var(--theme-soft); }
+    .col-title-row { display: flex; gap: 8px; margin-bottom: 12px; align-items: center; }
+    .col-title-input { font-weight: 900; color: var(--theme-color); border: 1px dashed #d0d7de; background: #fbfcfe; }
+    .col-config-btn { flex: 0 0 auto; min-width: 38px; height: 38px; padding: 0; border-radius: 9px; }
+    .block-list { min-height: 50px; }
+
+    .empty-note { border: 2px dashed #c7d0da; border-radius: 12px; padding: 16px; color: #748494; text-align: center; font-weight: 700; background: rgba(255,255,255,.65); }
+
+    .editor-block {
+      background: #fff;
+      border: 1px solid #dfe5ec;
+      border-left: 5px solid #c8d1db;
+      border-radius: 12px;
+      margin: 11px 0;
+      box-shadow: 0 2px 10px rgba(0,0,0,.04);
+      overflow: hidden;
+    }
+    .editor-block:hover { border-left-color: var(--theme-color); }
+    .block-toolbar {
+      background: #f6f8fb;
+      border-bottom: 1px solid #e2e8f0;
+      padding: 6px 8px;
+      display: flex;
+      gap: 6px;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .block-type { font-size: .76rem; color: #667788; font-weight: 900; text-transform: uppercase; letter-spacing: .5px; }
+    .block-actions { display: flex; gap: 4px; flex-wrap: wrap; }
+    .block-body { padding: 14px; }
+
+    .content-text p { margin: 0 0 8px; }
+    .subtitle-block { color: var(--theme-color); font-size: 1.3rem; font-weight: 900; margin: 0; border-bottom: 2px solid rgba(0,0,0,.08); padding-bottom: 6px; }
+    .link-btn, .highlight-btn {
+      display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+      text-decoration: none; border-radius: 999px; padding: 11px 18px; font-weight: 900;
+      background: var(--theme-color); color: white;
+    }
+    .activity-button-block { margin: 4px 0; }
+    .enhanced-link-btn { width: 260px; max-width: 100%; min-height: 64px; vertical-align: middle; text-align: center; white-space: normal; }
+    .enhanced-link-btn img { width: 32px; height: 32px; object-fit: contain; border-radius: 6px; margin-right: 10px; flex-shrink: 0; background: rgba(255,255,255,.35); }
+    .enhanced-link-btn .button-label { display: inline-block; overflow-wrap: anywhere; }
+    .enhanced-link-btn .button-text-wrap { display: inline-flex; flex-direction: column; align-items: center; justify-content: center; line-height: 1.15; flex: 1; min-width: 0; }
+    .enhanced-link-btn .button-tag { font-size: .75rem; background: #e1f5fe; color: #0277bd; padding: 2px 6px; border-radius: 6px; margin-left: 8px; font-weight: 900; white-space: nowrap; }
+    .enhanced-link-btn .button-tag.tag-below { margin-left: 0; margin-top: 5px; display: inline-block; }
+
+    .editor-text-cta-wrap { text-align: center; margin: 22px auto 0; padding: 0 20px; }
+    .editor-text-cta { display: inline-flex; align-items: center; justify-content: center; gap: 8px; text-decoration: none; border-radius: 999px; padding: 13px 24px; font-weight: 900; background: #fff; color: var(--theme-color); box-shadow: 0 4px 14px rgba(0,0,0,.16); border: 2px solid rgba(255,255,255,.75); }
+    .editor-text-cta:hover { filter: brightness(.98); transform: translateY(-1px); }
+    .highlight-box { background: var(--theme-soft); border: 1px solid rgba(0,0,0,.08); border-left: 5px solid var(--theme-color); border-radius: 12px; padding: 14px; }
+    .highlight-box p { margin: 8px 0 0; }
+    .image-block { text-align: center; }
+    .image-block img, .card-block img, .rich-content img { max-width: 100%; border-radius: 10px; height: auto; }
+    .image-caption { font-size: .86rem; color: #667788; margin-top: 6px; text-align: center; }
+    .card-block { display: flex; gap: 14px; align-items: center; }
+    .card-block.card-top { flex-direction: column; align-items: stretch; }
+    .card-block.card-right { flex-direction: row-reverse; }
+    .card-block .card-image-wrap { flex-shrink: 0; }
+    .card-block.card-top .card-image-wrap { width: 100%; }
+    .card-block .card-text { flex: 1; min-width: 0; }
+    .card-block img { max-height: 180px; object-fit: contain; background: #f6f8fb; }
+    .card-block h3 { margin: 0 0 6px; color: var(--theme-color); }
+    .card-block p { margin: 0; }
+
+    .video-wrap { position: relative; width: 100%; padding-top: 56.25%; border-radius: 12px; overflow: hidden; background: #111; box-shadow: 0 2px 12px rgba(0,0,0,.14); }
+    .video-wrap iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
+    .video-title { font-weight: 900; color: var(--theme-color); margin: 0 0 8px; }
+
+    .ficha-card { background: #fff; border-radius: 14px; border: 1px solid #dfe6ef; overflow: hidden; box-shadow: 0 3px 12px rgba(0,0,0,.08); }
+    .ficha-head {
+      background: var(--theme-color); color: white; padding: 12px 14px; display: flex; justify-content: space-between; align-items: center; gap: 12px;
+    }
+    .ficha-head h3 { margin: 0; font-size: 1.05rem; }
+    .ficha-head button { background: rgba(255,255,255,.2); color: white; border: 1px solid rgba(255,255,255,.35); border-radius: 8px; padding: 6px 8px; cursor: pointer; font-weight: 900; }
+    .ficha-content { padding: 16px; }
+    .ficha-actions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; }
+    .ficha-actions button { border: none; border-radius: 8px; padding: 8px 10px; font-weight: 900; cursor: pointer; background: #eef2f7; color: #263238; }
+    .fichas-stack { display: grid; gap: 14px; }
+    .group-title { margin: 0 0 12px; color: var(--theme-color); font-weight: 900; }
+
+    .thin-button-bar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+      margin: 6px 0;
+    }
+    .thin-button-bar.align-left { justify-content: flex-start; }
+    .thin-button-bar.align-center { justify-content: center; }
+    .thin-button-bar.align-right { justify-content: flex-end; }
+    .thin-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 260px;
+      min-height: 34px;
+      padding: 7px 14px;
+      border-radius: 999px;
+      border: 2px solid var(--theme-color);
+      background: var(--theme-color);
+      color: #fff;
+      text-decoration: none;
+      font-weight: 900;
+      line-height: 1.1;
+      box-shadow: 0 1px 4px rgba(0,0,0,.06);
+      transition: .16s ease;
+      max-width: 100%;
+      overflow-wrap: anywhere;
+      text-align: center;
+    }
+    .thin-btn:hover { filter: brightness(.98); transform: translateY(-1px); }
+    .thin-btn.outline { background: #fff; color: var(--theme-color); }
+    .thin-btn.soft { background: var(--theme-soft); color: var(--theme-color); border-color: rgba(0,0,0,.06); }
+    .thin-btn.color-verde { --btn-color:#27AE60; --btn-soft:#E8F5E9; }
+    .thin-btn.color-naranja { --btn-color:#E67E22; --btn-soft:#FFF3E0; }
+    .thin-btn.color-azul { --btn-color:#036FB0; --btn-soft:#E3F2FD; }
+    .thin-btn.color-rojo { --btn-color:#D31718; --btn-soft:#FFEBEE; }
+    .thin-btn.color-celeste { --btn-color:#039BE5; --btn-soft:#E1F5FE; }
+    .thin-btn.color-gris { --btn-color:#607D8B; --btn-soft:#ECEFF1; }
+    .thin-btn.color-violeta { --btn-color:#7E57C2; --btn-soft:#F3E5F5; }
+    .thin-btn.custom-color {
+      border-color: var(--btn-color);
+      background: var(--btn-color);
+      color: #fff;
+    }
+    .thin-btn.custom-color.outline {
+      background: #fff;
+      color: var(--btn-color);
+    }
+    .thin-btn.custom-color.soft {
+      background: var(--btn-soft);
+      color: var(--btn-color);
+      border-color: rgba(0,0,0,.06);
+    }
+    .thin-btn.custom-text {
+      color: var(--btn-text) !important;
+    }
+    .thin-button-form-item {
+      background:#f7f9fc;
+      border:1px solid #dce4ed;
+      border-radius:12px;
+      padding:12px;
+      margin:10px 0;
+    }
+    .thin-button-form-grid {
+      display:grid;
+      grid-template-columns: 1.1fr 1.6fr;
+      gap:8px;
+      align-items:end;
+    }
+    .thin-button-form-options {
+      display:grid;
+      grid-template-columns: repeat(4, minmax(0,1fr));
+      gap:8px;
+      align-items:end;
+      margin-top:8px;
+    }
+
+    .link-card-block {
+      --card-color: var(--theme-color);
+      --card-soft: var(--theme-soft);
+      background: #fff;
+      border: 1px solid #dfe6ef;
+      border-top: 5px solid var(--card-color);
+      border-radius: 16px;
+      box-shadow: 0 3px 12px rgba(0,0,0,.08);
+      padding: 14px;
+      transition: .18s ease;
+    }
+    .link-card-block:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 22px rgba(0,0,0,.12);
+    }
+    .link-card-block.card-soft {
+      background: var(--card-soft);
+      border-color: rgba(0,0,0,.07);
+      border-top-color: var(--card-color);
+    }
+    .link-card-block.card-outline {
+      background: #fff;
+      border: 2px solid var(--card-color);
+    }
+    .link-card-block.card-fill {
+      background: var(--card-color);
+      border-color: var(--card-color);
+      color: #fff;
+    }
+    .link-card-block.card-fill .link-card-title { color: #fff; }
+    .link-card-title {
+      margin: 0 0 12px;
+      color: var(--card-color);
+      font-size: 1.15rem;
+      line-height: 1.2;
+      font-weight: 900;
+      overflow-wrap: anywhere;
+    }
+    .link-card-buttons {
+      display: flex;
+      gap: 10px;
+      align-items: stretch;
+      justify-content: center;
+      flex-wrap: nowrap;
+    }
+    .link-card-btn {
+      --btn-color: var(--theme-color);
+      --btn-soft: var(--theme-soft);
+      flex: 1 1 0;
+      min-width: 0;
+      min-height: 40px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      text-decoration: none;
+      border: 2px solid var(--btn-color);
+      background: var(--btn-color);
+      color: #fff;
+      border-radius: 999px;
+      padding: 8px 12px;
+      font-weight: 900;
+      line-height: 1.1;
+      overflow-wrap: anywhere;
+      transition: .16s ease;
+      box-shadow: 0 2px 8px rgba(0,0,0,.08);
+    }
+    .link-card-btn:hover {
+      transform: translateY(-2px);
+      filter: brightness(.98);
+      box-shadow: 0 6px 16px rgba(0,0,0,.14);
+    }
+    .link-card-buttons.button-classic .link-card-btn {
+      border-radius: 12px;
+      min-height: 48px;
+    }
+    .link-card-buttons.button-outline .link-card-btn {
+      background: #fff;
+      color: var(--btn-color);
+    }
+    .link-card-buttons.button-soft .link-card-btn {
+      background: var(--btn-soft);
+      color: var(--btn-color);
+      border-color: rgba(0,0,0,.06);
+    }
+    .link-card-btn.custom-text { color: var(--btn-text) !important; }
+    .link-card-form-item {
+      background:#f7f9fc;
+      border:1px solid #dce4ed;
+      border-radius:12px;
+      padding:12px;
+      margin:10px 0;
+    }
+    .link-card-form-grid {
+      display:grid;
+      grid-template-columns: 1.1fr 1.7fr 1fr 1fr;
+      gap:8px;
+      align-items:end;
+    }
+    @media (max-width: 720px) {
+      .thin-button-form-grid,
+      .thin-button-form-options,
+      .link-card-form-grid { grid-template-columns: 1fr; }
+      .thin-button-bar { justify-content: flex-start !important; }
+      .link-card-buttons { flex-wrap: wrap; }
+      .link-card-btn { flex-basis: 100%; }
+    }
+
+    .add-panel { display: flex; flex-wrap: wrap; gap: 8px; padding: 10px; border: 2px dashed #c5ced8; border-radius: 12px; background: rgba(255,255,255,.55); margin-top: 12px; }
+    .add-panel select { width: 180px; background: #fff; color: #263238; border-color: #ccd6e0; }
+
+    .modal-overlay {
+      position: fixed; inset: 0; background: rgba(8,12,20,.72); display: none; align-items: center; justify-content: center;
+      z-index: 2000; padding: 20px;
+    }
+    .modal-overlay.open { display: flex; }
+    .modal {
+      width: min(860px, 100%); max-height: 90vh; overflow-y: auto; background: #fff; border-radius: 16px;
+      box-shadow: 0 20px 65px rgba(0,0,0,.35); color: #263238;
+    }
+    .modal-header { padding: 16px 20px; background: #f5f7fb; border-bottom: 1px solid #dde5ee; display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+    .modal-header h2 { margin: 0; font-size: 1.15rem; color: #263238; }
+    .modal-body { padding: 18px 20px; }
+    .modal-footer { padding: 14px 20px; border-top: 1px solid #dde5ee; display: flex; gap: 10px; justify-content: flex-end; background: #fbfcfe; }
+    .modal label { color: #536273; }
+    .modal input[type="text"], .modal input[type="url"], .modal select, .modal textarea {
+      background: #fff; color: #263238; border: 1px solid #cdd7e1;
+    }
+
+    .rich-toolbar { display: flex; flex-wrap: wrap; gap: 6px; background: #f5f7fb; border: 1px solid #dce4ed; border-radius: 10px 10px 0 0; padding: 7px; margin-top: 8px; }
+    .rich-editor {
+      min-height: 160px; border: 1px solid #dce4ed; border-top: 0; padding: 13px; border-radius: 0 0 10px 10px; outline: none; background: white;
+    }
+    .rich-editor:focus { box-shadow: inset 0 0 0 2px rgba(52,152,219,.12); }
+    .rich-toolbar select { width: auto; min-width: 115px; padding: 6px 8px; border-radius: 8px; border: 1px solid #d8dee7; background: #fff; color: #27313f; font-weight: 800; }
+    .rich-editor img.selected-rich-image { outline: 3px solid #3498db; box-shadow: 0 0 0 3px rgba(52,152,219,.18); }
+    .rich-editor table { width: 100%; border-collapse: collapse; margin: 10px 0; }
+    .rich-editor td, .rich-editor th { border: 1px solid #999; padding: 6px; min-width: 40px; }
+
+    .gallery-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(125px, 1fr)); gap: 12px; }
+    .gallery-item { border: 1px solid #d8e1eb; border-radius: 12px; padding: 10px; background: #fbfcfe; cursor: pointer; text-align: center; transition: .16s ease; }
+    .gallery-item:hover { transform: translateY(-2px); border-color: var(--theme-color); box-shadow: 0 4px 14px rgba(0,0,0,.09); }
+    .gallery-item img { height: 82px; width: 100%; object-fit: contain; display: block; margin-bottom: 7px; }
+    .gallery-item span { font-size: .75rem; color: #586878; word-break: break-all; }
+    .help { font-size: .82rem; color: #728295; margin: 6px 0 0; }
+    .notice { padding: 10px 12px; border-radius: 10px; background: #fff8e5; border-left: 5px solid #f1c40f; color: #5e4b0b; margin: 10px 0; }
+
+    @media (max-width: 900px) {
+      body { overflow: auto; }
+      #app { flex-direction: column; height: auto; min-height: 100vh; }
+      #sidebar { width: 100%; max-height: none; }
+      .sidebar-actions { grid-template-columns: repeat(2, 1fr); }
+      #canvas-area { overflow: visible; }
+      .hero-inner { flex-direction: column !important; text-align: center !important; }
+      .card-block { flex-direction: column; text-align: center; }
+    }
+  </style>
+</head>
+<body>
+<div id="app">
+  <aside id="sidebar">
+    <div class="sidebar-header">
+      <h1>Constructor 3</h1>
+      <p>Editor unificado de páginas, columnas y fichas. v34-INSTALACION</p>
+    </div>
+
+    <div class="sidebar-content">
+      <section class="group">
+        <h2>Carpeta de trabajo</h2>
+        <div id="instStatus"></div>
+        <p class="help">Guardar escribe en <strong>borradores/paginas/</strong>, Guardar HTML en <strong>publicar/</strong> y la galería lee <strong>images/</strong>.</p>
+      </section>
+
+      <section class="group">
+        <h2>Configuración general</h2>
+        <label>Materia / tema</label>
+        <select id="themeSelect">
+          <option value="lengua">Lengua - Verde</option>
+          <option value="matematica">Matemática - Naranja</option>
+          <option value="recursos">Recursos - Azul</option>
+          <option value="diseno">Diseño - Rojo</option>
+          <option value="celeste">Celeste</option>
+          <option value="turquesa">Turquesa</option>
+          <option value="violeta">Violeta</option>
+          <option value="lila">Lila</option>
+          <option value="fucsia">Fucsia</option>
+          <option value="indigo">Índigo</option>
+          <option value="lima">Lima</option>
+          <option value="amarillo">Amarillo</option>
+          <option value="coral">Coral</option>
+          <option value="marron">Marrón</option>
+          <option value="gris">Gris</option>
+        </select>
+
+        <label>Ubicación de la página exportada</label>
+        <select id="outputLocation">
+          <option value="root">Raíz del sitio</option>
+          <option value="subfolder">Subcarpeta</option>
+        </select>
+        <div id="folderBox">
+          <label>Carpeta de publicación</label>
+          <input type="text" id="publishFolder" placeholder="Ej: cuentos">
+        </div>
+        <label>Nombre del archivo</label>
+        <input type="text" id="publishFilename" placeholder="actividad.html">
+      </section>
+
+      <section class="group">
+        <h2>Navegación</h2>
+        <label>Tipo de barra</label>
+        <select id="navType">
+          <option value="root">Principal - página en raíz</option>
+          <option value="subfolder">Principal - página en subcarpeta</option>
+          <option value="back">Con botón Volver - misma carpeta</option>
+          <option value="none">Sin barra</option>
+        </select>
+        <div id="backBox">
+          <label>Texto del botón volver</label>
+          <input type="text" id="backText" placeholder="Volver a lecturas">
+          <label>Archivo de destino en la misma carpeta</label>
+          <input type="text" id="backHref" placeholder="index.html">
+        </div>
+      </section>
+
+      <section class="group">
+        <h2>Editor de textos</h2>
+        <div class="check-row">
+          <span>Mostrar botón “📝 Editor de texto para trabajar en línea”</span>
+          <input type="checkbox" id="showTextEditor">
+        </div>
+        <p class="help">Este botón abre el editor de textos tipo Word del sitio. No enlaza al constructor privado.</p>
+      </section>
+
+      <section class="group">
+        <h2>Encabezado</h2>
+        <label>Título principal</label>
+        <input type="text" id="pageTitle">
+        <label>Subtítulo</label>
+        <input type="text" id="pageSubtitle">
+        <label>Diseño del encabezado</label>
+        <select id="heroLayout">
+          <option value="center">Solo texto</option>
+          <option value="img-left">Imagen a la izquierda</option>
+          <option value="img-right">Imagen a la derecha</option>
+          <option value="img-both">Imágenes a ambos lados</option>
+          <option value="img-top">Imagen arriba</option>
+        </select>
+        <label>Alineación del texto</label>
+        <select id="heroTextAlign">
+          <option value="center">Centrado</option>
+          <option value="left">Izquierda</option>
+          <option value="right">Derecha</option>
+        </select>
+        <div class="row">
+          <button class="btn btn-info btn-sm" onclick="chooseHeroImage(1)">Galería imagen 1</button>
+          <button class="btn btn-secondary btn-sm" onclick="clearHeroImage(1)">Quitar</button>
+        </div>
+        <div class="help" id="heroImg1Label">Imagen 1: ninguna</div>
+        <div id="heroImg2Controls">
+          <div class="row" style="margin-top:8px;">
+            <button class="btn btn-info btn-sm" onclick="chooseHeroImage(2)">Galería imagen 2</button>
+            <button class="btn btn-secondary btn-sm" onclick="clearHeroImage(2)">Quitar</button>
+          </div>
+          <div class="help" id="heroImg2Label">Imagen 2: ninguna</div>
+        </div>
+      </section>
+
+      <section class="group">
+        <h2>Columnas</h2>
+        <label>Cantidad de columnas</label>
+        <select id="colCount">
+          <option value="1">1 columna</option>
+          <option value="2">2 columnas</option>
+          <option value="3">3 columnas</option>
+          <option value="4">4 columnas</option>
+        </select>
+        <p class="help">Podés agregar fichas, textos, imágenes, tarjetas y videos en cualquier columna.</p>
+      </section>
+    </div>
+
+    <div class="sidebar-actions">
+      <button class="btn btn-danger btn-sm" onclick="newProject()">Nuevo</button>
+      <button class="btn btn-secondary btn-sm" onclick="openDrafts()" title="Abrir un JSON de borradores/ u otra ubicación">Abrir</button>
+      <button class="btn btn-primary btn-sm" onclick="saveJSON()" title="Guarda el JSON en borradores/ (Ctrl+S)">Guardar</button>
+      <button class="btn btn-light btn-sm" onclick="previewHTML()">Vista previa</button>
+      <button class="btn btn-warning btn-sm" onclick="downloadHTML()" title="Guarda el HTML en publicar/">Guardar HTML</button>
+      <button class="btn btn-info btn-sm" onclick="showUsedImages()" title="Qué imágenes usa esta página">Imágenes usadas</button>
+    </div>
+  </aside>
+
+  <main id="canvas-area">
+    <div id="editor-preview"></div>
+  </main>
+</div>
+
+<div id="blockModal" class="modal-overlay">
+  <div class="modal">
+    <div class="modal-header">
+      <h2 id="blockModalTitle">Editar bloque</h2>
+      <button class="btn btn-light btn-sm" onclick="closeBlockModal()">✕</button>
+    </div>
+    <div class="modal-body" id="blockModalBody"></div>
+    <div class="modal-footer">
+      <button class="btn btn-light" onclick="closeBlockModal()">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveBlockModal()">Guardar cambios</button>
+    </div>
+  </div>
+</div>
+
+<div id="columnModal" class="modal-overlay">
+  <div class="modal">
+    <div class="modal-header">
+      <h2 id="columnModalTitle">Configuración de columna</h2>
+      <button class="btn btn-light btn-sm" onclick="closeColumnConfig()">✕</button>
+    </div>
+    <div class="modal-body" id="columnModalBody"></div>
+    <div class="modal-footer">
+      <button class="btn btn-light" onclick="closeColumnConfig()">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveColumnConfig()">Guardar cambios</button>
+    </div>
+  </div>
+</div>
+
+<script>
+let previewMode = false;
+const STORAGE_KEY = 'constructor3_state_v1';
+const EDITOR_ROOT = '../../../';
+const EDITOR_IMAGES = '../../../images/';
+const EDITOR_LOGO = '../../../logo.png';
+
+const THEMES = {
+  lengua: { name: 'Lengua', color: '#27AE60', soft: '#E8F5E9', title: '#1B5E20' },
+  matematica: { name: 'Matemática', color: '#E67E22', soft: '#FFF3E0', title: '#E65100' },
+  recursos: { name: 'Recursos', color: '#036FB0', soft: '#E3F2FD', title: '#01579B' },
+  diseno: { name: 'Diseño', color: '#D31718', soft: '#FFEBEE', title: '#B71C1C' },
+  celeste: { name: 'Celeste', color: '#039BE5', soft: '#E1F5FE', title: '#0277BD' },
+  turquesa: { name: 'Turquesa', color: '#00ACC1', soft: '#E0F7FA', title: '#006064' },
+  violeta: { name: 'Violeta', color: '#7E57C2', soft: '#F3E5F5', title: '#4A148C' },
+  lila: { name: 'Lila', color: '#AB47BC', soft: '#F8EAF6', title: '#6A1B9A' },
+  fucsia: { name: 'Fucsia', color: '#D81B60', soft: '#FCE4EC', title: '#880E4F' },
+  indigo: { name: 'Índigo', color: '#3F51B5', soft: '#E8EAF6', title: '#1A237E' },
+  lima: { name: 'Lima', color: '#7CB342', soft: '#F1F8E9', title: '#33691E' },
+  amarillo: { name: 'Amarillo', color: '#F9A825', soft: '#FFFDE7', title: '#F57F17' },
+  coral: { name: 'Coral', color: '#FF7043', soft: '#FBE9E7', title: '#BF360C' },
+  marron: { name: 'Marrón', color: '#795548', soft: '#EFEBE9', title: '#3E2723' },
+  gris: { name: 'Gris', color: '#607D8B', soft: '#ECEFF1', title: '#263238' }
+};
+
+let pageData = createDefaultData();
+let modalContext = null;
+let galleryCallback = null;
+let activeRichEditor = null;
+let selectedRichImage = null;
+let saveTimer = null;
+
+function createDefaultData() {
+  return {
+    version: 'constructor3-v1',
+    theme: 'lengua',
+    outputLocation: 'subfolder',
+    publishFolder: '',
+    publishFilename: 'pagina.html',
+    navType: 'subfolder',
+    backText: 'Volver',
+    backHref: 'index.html',
+    showTextEditor: true,
+    title: 'Nueva página',
+    subtitle: 'Actividades y recursos',
+    heroLayout: 'center',
+    heroTextAlign: 'center',
+    heroImage: '',
+    heroImage2: '',
+    colCount: 3,
+    columnTitles: [
+      { text: 'Columna 1', colorMode: 'page', color: 'theme', titleColor: 'column', bgStyle: 'white' },
+      { text: 'Columna 2', colorMode: 'page', color: 'theme', titleColor: 'column', bgStyle: 'white' },
+      { text: 'Columna 3', colorMode: 'page', color: 'theme', titleColor: 'column', bgStyle: 'white' }
+    ],
+    topBlocks: [],
+    columns: [[], [], []],
+    bottomBlocks: []
+  };
+}
+
+function ensureDataShape() {
+  if (!pageData.columns) pageData.columns = [[], [], []];
+  if (!pageData.topBlocks) pageData.topBlocks = [];
+  if (!pageData.bottomBlocks) pageData.bottomBlocks = [];
+  if (!pageData.columnTitles) pageData.columnTitles = [];
+  pageData.colCount = Number(pageData.colCount || 3);
+  while (pageData.columns.length < pageData.colCount) pageData.columns.push([]);
+  while (pageData.columnTitles.length < pageData.colCount) pageData.columnTitles.push(defaultColumnConfig(pageData.columnTitles.length));
+  pageData.columnTitles = pageData.columnTitles.map((col, idx) => normalizeColumnConfig(col, idx));
+  if (pageData.columns.length > pageData.colCount) pageData.columns.length = pageData.colCount;
+  if (pageData.columnTitles.length > pageData.colCount) pageData.columnTitles.length = pageData.colCount;
+  pageData.publishFilename = pageData.publishFilename || 'pagina.html';
+  pageData.backHref = pageData.backHref || 'index.html';
+  pageData.backText = pageData.backText || 'Volver';
+  if (pageData.showTextEditor === undefined) pageData.showTextEditor = true;
+}
+
+function defaultColumnConfig(idx) {
+  return { text: `Columna ${idx + 1}`, colorMode: 'page', color: 'theme', titleColor: 'column', bgStyle: 'white' };
+}
+
+function normalizeColumnConfig(col, idx) {
+  if (typeof col === 'string') col = { text: col };
+  col = col || {};
+  return {
+    text: col.text || `Columna ${idx + 1}`,
+    colorMode: col.colorMode || 'page',
+    color: col.color || 'theme',
+    titleColor: col.titleColor || 'column',
+    bgStyle: col.bgStyle || 'white'
+  };
+}
+
+function escapeHTML(str) {
+  return String(str ?? '').replace(/[&<>'"]/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[ch]));
+}
+function escapeAttr(str) { return escapeHTML(str).replace(/`/g, '&#96;'); }
+function nl2br(str) { return escapeHTML(str).replace(/\n/g, '<br>'); }
+function encodePathPart(filename) { return String(filename || '').split('/').map(encodeURIComponent).join('/'); }
+function editorImageSrc(filename) { return filename ? Instalacion.imageSrc(filename) : ''; }
+function exportAssetPrefix() { return pageData.outputLocation === 'root' ? '' : '../'; }
+function exportImageSrc(filename) {
+  if (!filename) return '';
+  if (previewMode) return Instalacion.imageSrc(filename);
+  return exportAssetPrefix() + 'images/' + encodePathPart(filename);
+}
+function exportLogoSrc() { return exportAssetPrefix() + 'logo.png'; }
+
+function normalizePublishFolder(folder) {
+  let f = String(folder || '').trim().replace(/\\/g, '/');
+  f = f.replace(/^\/+|\/+$/g, '');
+  return f.split('/').filter(Boolean).map(part => part.replace(/[^a-zA-Z0-9._-]/g, '-')).join('/');
+}
+
+function setThemeVars() {
+  const t = getPageTheme();
+  document.documentElement.style.setProperty('--theme-color', t.color);
+  document.documentElement.style.setProperty('--theme-soft', t.soft);
+}
+
+function getPageTheme() {
+  return THEMES[pageData.theme] || THEMES.lengua;
+}
+
+function colorDataFromKey(key, fallback=null) {
+  if (!key || key === 'theme' || key === 'page') return fallback || getPageTheme();
+  if (THEMES[key]) return THEMES[key];
+  if (typeof COLOR_PALETTE !== 'undefined' && COLOR_PALETTE[key]) {
+    return { name: COLOR_PALETTE[key][0], color: COLOR_PALETTE[key][1], soft: COLOR_PALETTE[key][2], title: COLOR_PALETTE[key][1] };
+  }
+  return fallback || getPageTheme();
+}
+
+function getColumnTheme(colIdx) {
+  const cfg = normalizeColumnConfig(pageData.columnTitles[colIdx], colIdx);
+  if (cfg.colorMode === 'custom') return colorDataFromKey(cfg.color, getPageTheme());
+  return getPageTheme();
+}
+
+function getColumnStyleVars(colIdx) {
+  const t = getColumnTheme(colIdx);
+  return `--theme-color:${t.color};--theme-soft:${t.soft};--theme:${t.color};--soft:${t.soft};`;
+}
+
+function getColumnTitleColor(colIdx) {
+  const cfg = normalizeColumnConfig(pageData.columnTitles[colIdx], colIdx);
+  if (cfg.titleColor === 'column') return getColumnTheme(colIdx).color;
+  if (cfg.titleColor === 'page') return getPageTheme().color;
+  return thinButtonTextColorValue(cfg.titleColor) || getColumnTheme(colIdx).color;
+}
+
+function getColumnBackgroundClass(colIdx) {
+  const cfg = normalizeColumnConfig(pageData.columnTitles[colIdx], colIdx);
+  return cfg.bgStyle === 'soft' ? ' col-soft' : '';
+}
+
+function bindControls() {
+  const ids = ['themeSelect','outputLocation','publishFolder','publishFilename','navType','backText','backHref','showTextEditor','pageTitle','pageSubtitle','heroLayout','heroTextAlign','colCount'];
+  ids.forEach(id => {
+    const el = document.getElementById(id);
+    el.addEventListener(id === 'colCount' ? 'change' : 'input', syncFromControls);
+    if (['themeSelect','outputLocation','navType','heroLayout','heroTextAlign','showTextEditor'].includes(id)) el.addEventListener('change', syncFromControls);
+  });
+}
+
+function syncControls() {
+  document.getElementById('themeSelect').value = pageData.theme;
+  document.getElementById('outputLocation').value = pageData.outputLocation;
+  document.getElementById('publishFolder').value = pageData.publishFolder || '';
+  document.getElementById('publishFilename').value = pageData.publishFilename || 'pagina.html';
+  document.getElementById('navType').value = pageData.navType;
+  document.getElementById('backText').value = pageData.backText || 'Volver';
+  document.getElementById('backHref').value = pageData.backHref || 'index.html';
+  document.getElementById('showTextEditor').checked = pageData.showTextEditor !== false;
+  document.getElementById('pageTitle').value = pageData.title || '';
+  document.getElementById('pageSubtitle').value = pageData.subtitle || '';
+  document.getElementById('heroLayout').value = pageData.heroLayout || 'center';
+  document.getElementById('heroTextAlign').value = pageData.heroTextAlign || 'center';
+  document.getElementById('colCount').value = String(pageData.colCount || 3);
+  document.getElementById('folderBox').style.display = pageData.outputLocation === 'subfolder' ? 'block' : 'none';
+  document.getElementById('backBox').style.display = pageData.navType === 'back' ? 'block' : 'none';
+  document.getElementById('heroImg2Controls').style.display = pageData.heroLayout === 'img-both' ? 'block' : 'none';
+  document.getElementById('heroImg1Label').textContent = 'Imagen 1: ' + (pageData.heroImage || 'ninguna');
+  document.getElementById('heroImg2Label').textContent = 'Imagen 2: ' + (pageData.heroImage2 || 'ninguna');
+}
+
+function syncFromControls() {
+  pageData.theme = document.getElementById('themeSelect').value;
+  pageData.outputLocation = document.getElementById('outputLocation').value;
+  pageData.publishFolder = document.getElementById('publishFolder').value.trim();
+  pageData.publishFilename = document.getElementById('publishFilename').value.trim() || 'pagina.html';
+  pageData.navType = document.getElementById('navType').value;
+  pageData.backText = document.getElementById('backText').value.trim() || 'Volver';
+  pageData.backHref = document.getElementById('backHref').value.trim() || 'index.html';
+  pageData.showTextEditor = document.getElementById('showTextEditor').checked;
+  pageData.title = document.getElementById('pageTitle').value;
+  pageData.subtitle = document.getElementById('pageSubtitle').value;
+  pageData.heroLayout = document.getElementById('heroLayout').value;
+  pageData.heroTextAlign = document.getElementById('heroTextAlign').value;
+  pageData.colCount = Number(document.getElementById('colCount').value);
+  ensureDataShape();
+  setThemeVars();
+  syncControls();
+  render();
+  scheduleSave();
+}
+
+function scheduleSave() {
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(() => {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(pageData));
+  }, 200);
+}
+
+function loadLocal() {
+  const raw = localStorage.getItem(STORAGE_KEY);
+  if (!raw) return;
+  try { pageData = JSON.parse(raw); ensureDataShape(); } catch (e) { console.warn('No se pudo recuperar localStorage', e); }
+}
+
+function render() {
+  ensureDataShape();
+  setThemeVars();
+  syncControls();
+  const preview = document.getElementById('editor-preview');
+  preview.innerHTML = renderEditorNav() + renderHero(true) + `
+    <div class="page-wrap">
+      ${renderZone('topBlocks', 'Bloques de ancho completo superiores')}
+      ${renderColumnsEditor()}
+      ${renderZone('bottomBlocks', 'Bloques de ancho completo inferiores')}
+    </div>`;
+}
+
+function renderEditorNav() {
+  if (pageData.navType === 'none') return '';
+  let root = '../../../';
+  let back = '';
+  if (pageData.navType === 'back') {
+    back = `<a class="back-link" href="#" onclick="return false;">⬅ ${escapeHTML(pageData.backText || 'Volver')}</a>`;
+  }
+  return `<header class="topbar-preview">
+    <a href="#" onclick="return false;"><img class="logo" src="${Instalacion.logoSrc()}" alt="Logo" onerror="this.style.display='none'"></a>
+    <nav>
+      <a href="#" onclick="return false;">Lengua</a>
+      <a href="#" onclick="return false;">Matemática</a>
+      <a href="#" onclick="return false;">Recursos</a>
+      <a href="#" onclick="return false;">Diseño</a>
+      ${back}
+    </nav>
+  </header>`;
+}
+
+function renderEditorTextEditorButton() {
+  if (pageData.showTextEditor === false) return '';
+  const href = pageData.outputLocation === 'root' ? 'editor.html' : '../editor.html';
+  return `<div class="editor-text-cta-wrap"><a href="${escapeAttr(href)}" target="editor_escolar_app" class="editor-text-cta" onclick="return false;">📝 Editor de texto para trabajar en línea</a></div>`;
+}
+
+function renderHero(isEditor=false) {
+  const layout = pageData.heroLayout || 'center';
+  const align = pageData.heroTextAlign || 'center';
+  const img1 = pageData.heroImage ? `<img class="hero-img" src="${isEditor ? editorImageSrc(pageData.heroImage) : exportImageSrc(pageData.heroImage)}" alt="">` : '';
+  const img2 = pageData.heroImage2 ? `<img class="hero-img" src="${isEditor ? editorImageSrc(pageData.heroImage2) : exportImageSrc(pageData.heroImage2)}" alt="">` : '';
+  const editorHref = isEditor ? (pageData.outputLocation === 'root' ? 'editor.html' : '../editor.html') : (exportAssetPrefix() + 'editor.html');
+  const editorBtn = pageData.showTextEditor !== false
+    ? `<div class="${isEditor ? 'editor-text-cta-wrap' : 'text-editor-cta-wrap'}"><a href="${escapeAttr(editorHref)}" target="editor_escolar_app" class="${isEditor ? 'editor-text-cta' : 'text-editor-cta'}" ${isEditor ? 'onclick="return false;"' : ''}>📝 Editor de texto para trabajar en línea</a></div>`
+    : '';
+  const text = `<div class="hero-text" style="text-align:${escapeAttr(align)}"><h1>${escapeHTML(pageData.title)}</h1><p>${escapeHTML(pageData.subtitle)}</p>${editorBtn}</div>`;
+  let inner = text;
+  if (layout === 'img-left') inner = img1 + text;
+  if (layout === 'img-right') inner = text + img1;
+  if (layout === 'img-both') inner = img1 + text + img2;
+  if (layout === 'img-top') inner = img1 + text;
+  return `<section class="page-header"><div class="hero-inner ${layout === 'img-top' ? 'img-top' : ''} ${layout === 'center' ? 'center' : ''}">${inner}</div></section>`;
+}
+
+function renderZone(key, label) {
+  const blocks = pageData[key] || [];
+  return `<section class="zone">
+    <div class="zone-header"><span class="zone-title">${label}</span></div>
+    <div class="block-list">${blocks.length ? blocks.map((b,i)=>renderEditorBlock(key, null, i, b)).join('') : '<div class="empty-note">Sin bloques todavía.</div>'}</div>
+    ${renderAddPanel(key, null)}
+  </section>`;
+}
+
+function renderColumnsEditor() {
+  const cols = pageData.columns.slice(0, pageData.colCount);
+  const gridCols = `repeat(${pageData.colCount}, minmax(0, 1fr))`;
+  return `<section class="zone">
+    <div class="zone-header"><span class="zone-title">Paño de columnas</span></div>
+    <div class="columns-grid" style="grid-template-columns:${gridCols}">
+      ${cols.map((blocks, colIdx) => {
+        const cfg = normalizeColumnConfig(pageData.columnTitles[colIdx], colIdx);
+        const vars = getColumnStyleVars(colIdx);
+        const titleColor = getColumnTitleColor(colIdx);
+        return `
+        <div class="col-card${getColumnBackgroundClass(colIdx)}" style="${escapeAttr(vars)}">
+          <div class="col-title-row">
+            <input class="col-title-input" style="color:${escapeAttr(titleColor)}" value="${escapeAttr(cfg.text)}" oninput="setColumnTitle(${colIdx}, this.value)">
+            <button class="btn btn-light btn-sm col-config-btn" title="Configurar colores de esta columna" onclick="openColumnConfig(${colIdx})">⚙️</button>
+          </div>
+          <div class="block-list">${blocks.length ? blocks.map((b,i)=>renderEditorBlock('columns', colIdx, i, b)).join('') : '<div class="empty-note">Columna vacía.</div>'}</div>
+          ${renderAddPanel('columns', colIdx)}
+        </div>`;
+      }).join('')}
+    </div>
+  </section>`;
+}
+
+function setColumnTitle(colIdx, value) {
+  pageData.columnTitles[colIdx] = normalizeColumnConfig(pageData.columnTitles[colIdx], colIdx);
+  pageData.columnTitles[colIdx].text = value;
+  scheduleSave();
+}
+
+let columnModalIndex = null;
+function openColumnConfig(colIdx) {
+  columnModalIndex = colIdx;
+  const cfg = normalizeColumnConfig(pageData.columnTitles[colIdx], colIdx);
+  document.getElementById('columnModalTitle').textContent = 'Configuración de columna ' + (colIdx + 1);
+  document.getElementById('columnModalBody').innerHTML = `
+    ${selectField('colColorMode', 'Color de la columna', [['page','Usar color de la página'],['custom','Color propio']], cfg.colorMode || 'page')}
+    ${selectField('colColor', 'Elegir color propio', colorOptionArray({ theme: true, themeLabel: 'Color de la página' }), cfg.color || 'theme')}
+    ${selectField('colTitleColor', 'Color del título de columna', [['column','Color de la columna'],['page','Color de la página']].concat(textColorOptionArray({ defaultOption: false })), cfg.titleColor || 'column')}
+    ${selectField('colBgStyle', 'Fondo de la columna', [['white','Blanco'],['soft','Suave del color elegido']], cfg.bgStyle || 'white')}
+    <p class="help">Los bloques de esta columna usan este color si no tienen un color individual elegido.</p>
+  `;
+  document.getElementById('columnModal').classList.add('open');
+}
+
+function closeColumnConfig() {
+  document.getElementById('columnModal').classList.remove('open');
+  columnModalIndex = null;
+}
+
+function getColumnField(name) {
+  const el = document.querySelector(`#columnModalBody [data-field="${CSS.escape(name)}"]`);
+  return el ? (el.type === 'checkbox' ? el.checked : el.value) : '';
+}
+
+function saveColumnConfig() {
+  if (columnModalIndex === null) return;
+  const cfg = normalizeColumnConfig(pageData.columnTitles[columnModalIndex], columnModalIndex);
+  cfg.colorMode = getColumnField('colColorMode') || 'page';
+  cfg.color = getColumnField('colColor') || 'theme';
+  cfg.titleColor = getColumnField('colTitleColor') || 'column';
+  cfg.bgStyle = getColumnField('colBgStyle') || 'white';
+  pageData.columnTitles[columnModalIndex] = cfg;
+  closeColumnConfig();
+  render();
+  scheduleSave();
+}
+
+function renderAddPanel(zone, colIdx) {
+  const id = `add-${zone}-${colIdx ?? 'x'}-${Math.random().toString(36).slice(2)}`;
+  return `<div class="add-panel">
+    <select id="${id}">
+      <option value="text">Texto libre</option>
+      <option value="subtitle">Subtítulo</option>
+      <option value="button">Botón de enlace</option>
+      <option value="highlight">Botón destacado</option>
+      <option value="card">Tarjeta ilustrada</option>
+      <option value="image">Imagen</option>
+      <option value="video">Video de YouTube</option>
+      <option value="ficha">Ficha desplegable</option>
+      <option value="fichagroup">Grupo de fichas</option>
+      <option value="thinbuttons">Botonera fina</option>
+      <option value="linkcard">Ficha de enlaces</option>
+    </select>
+    <button class="btn btn-primary btn-sm" onclick="addBlock('${zone}', ${colIdx === null ? 'null' : colIdx}, document.getElementById('${id}').value)">Agregar bloque</button>
+  </div>`;
+}
+
+function getBlockList(zone, colIdx) {
+  if (zone === 'columns') return pageData.columns[colIdx];
+  return pageData[zone];
+}
+
+function addBlock(zone, colIdx, type) {
+  const block = defaultBlock(type);
+  const list = getBlockList(zone, colIdx);
+  list.push(block);
+  render();
+  scheduleSave();
+  editBlock(zone, colIdx, list.length - 1);
+}
+
+function defaultBlock(type) {
+  const defaults = {
+    text: { type, html: '<p>Escribí el texto acá.</p>', align: 'left', textColor: '', invert: false, bold: false, italic: false },
+    subtitle: { type, text: 'Nuevo subtítulo', align: 'left', textColor: '', invert: false, bold: true, italic: false },
+    button: { type, text: 'Abrir recurso', url: '#', tag: '', tagNewline: false, image: '', align: 'left', textColor: '', invert: false, bold: false, italic: false },
+    highlight: { type, text: 'Actividad destacada', url: '#', description: 'Breve descripción del recurso.', image: '', align: 'left', textColor: '', invert: false, bold: false, italic: false },
+    card: { type, title: 'Tarjeta ilustrada', text: 'Descripción de la tarjeta.', btnText: 'Abrir', image: '', url: '', imagePosition: 'top', imageAlign: 'center', textAlign: 'left', imageWidth: '140', align: 'left', textColor: '', invert: false, bold: false, italic: false },
+    image: { type, image: '', caption: '', align: 'center', width: '100' },
+    video: { type, title: 'Video', url: '' },
+    ficha: { type, title: 'Nueva ficha', html: '<p>Contenido de la ficha.</p>', collapsed: false, copy: true, print: true },
+    fichagroup: { type, title: 'Grupo de fichas', fichas: [ { title: 'Ficha 1', html: '<p>Contenido de la ficha.</p>', collapsed: true, copy: true, print: true } ] },
+    thinbuttons: { type, align: 'center', defaultStyle: 'fill', defaultColor: 'theme', defaultTextColor: 'default', buttons: [
+      { text: 'Caza mayor', url: '#', style: 'default', color: 'default', textColor: 'default' },
+      { text: 'Caza mayor - fichas', url: '#', style: 'soft', color: 'celeste', textColor: 'default' },
+      { text: 'Una muerte', url: '#', style: 'default', color: 'default', textColor: 'default' }
+    ] },
+    linkcard: { type, title: 'Caza mayor', titleAlign: 'center', titleColor: 'theme', titleBold: true, titleItalic: false, cardStyle: 'soft', cardColor: 'theme', buttonCount: '2', buttonStyle: 'pills', buttons: [
+      { text: 'Texto', url: '#', color: 'verde', textColor: 'default' },
+      { text: 'Fichas', url: '#', color: 'turquesa', textColor: 'default' },
+      { text: 'PDF', url: '#', color: 'violeta', textColor: 'default' }
+    ] }
+  };
+  return JSON.parse(JSON.stringify(defaults[type] || defaults.text));
+}
+
+function renderEditorBlock(zone, colIdx, idx, block) {
+  return `<article class="editor-block">
+    <div class="block-toolbar">
+      <span class="block-type">${blockLabel(block.type)}</span>
+      <div class="block-actions">
+        <button class="btn btn-light btn-sm" onclick="moveBlock('${zone}', ${colIdx === null ? 'null' : colIdx}, ${idx}, -1)">↑</button>
+        <button class="btn btn-light btn-sm" onclick="moveBlock('${zone}', ${colIdx === null ? 'null' : colIdx}, ${idx}, 1)">↓</button>
+        <button class="btn btn-info btn-sm" onclick="editBlock('${zone}', ${colIdx === null ? 'null' : colIdx}, ${idx})">Editar</button>
+        <button class="btn btn-secondary btn-sm" onclick="duplicateBlock('${zone}', ${colIdx === null ? 'null' : colIdx}, ${idx})">Duplicar</button>
+        <button class="btn btn-danger btn-sm" onclick="deleteBlock('${zone}', ${colIdx === null ? 'null' : colIdx}, ${idx})">Borrar</button>
+      </div>
+    </div>
+    <div class="block-body">${renderBlockPreview(block, true)}</div>
+  </article>`;
+}
+
+function blockLabel(type) {
+  return ({ text:'Texto', subtitle:'Subtítulo', button:'Botón', highlight:'Destacado', card:'Tarjeta', image:'Imagen', video:'YouTube', ficha:'Ficha', fichagroup:'Grupo de fichas', thinbuttons:'Botonera fina', linkcard:'Ficha de enlaces' })[type] || type;
+}
+
+function renderBlockPreview(block, isEditor=false) {
+  switch(block.type) {
+    case 'text': return renderTextBlock(block, isEditor);
+    case 'subtitle': return renderSubtitleBlock(block, isEditor);
+    case 'button': return renderButtonBlock(block, isEditor);
+    case 'highlight': return renderHighlightBlock(block, isEditor);
+    case 'card': return renderCardBlock(block, isEditor);
+    case 'image': return renderImageBlock(block, isEditor);
+    case 'video': return renderVideo(block.url, block.title);
+    case 'ficha': return renderFicha(block, isEditor);
+    case 'fichagroup': return `<div><h3 class="group-title">${escapeHTML(block.title || '')}</h3><div class="fichas-stack">${(block.fichas || []).map(f => renderFicha({...f, type:'ficha'}, isEditor)).join('')}</div></div>`;
+    case 'thinbuttons': return renderThinButtonBar(block, isEditor);
+    case 'linkcard': return renderLinkCardBlock(block, isEditor);
+    default: return '<div class="empty-note">Bloque no reconocido.</div>';
+  }
+}
+
+function validChoice(value, allowed, fallback) {
+  return allowed.includes(value) ? value : fallback;
+}
+function clampNum(value, min, max, fallback) {
+  const n = Number(value);
+  if (!Number.isFinite(n)) return fallback;
+  return Math.max(min, Math.min(max, n));
+}
+
+function resolveElementColor(value) {
+  if (!value || value === 'default') return '';
+  if (value === 'blanco') return '#ffffff';
+  if (value === 'negro') return '#263238';
+  if (typeof COLOR_PALETTE !== 'undefined' && COLOR_PALETTE[value]) return COLOR_PALETTE[value][1];
+  return value || '';
+}
+
+function sharedElementStyle(block, isEditor=false, options={}) {
+  const align = validChoice(block.align || options.defaultAlign || 'left', ['left','center','right'], options.defaultAlign || 'left');
+  const textColor = resolveElementColor(block.textColor || block.textcolor || '');
+  const themeVar = isEditor ? 'var(--theme-color)' : 'var(--theme)';
+  const styleParts = [];
+  if (options.includeAlign !== false) styleParts.push(`text-align:${align};`);
+  if (block.invert) {
+    styleParts.push(`background:${themeVar};`);
+    styleParts.push('color:#ffffff;');
+    styleParts.push('border-radius:12px;');
+    styleParts.push('padding:12px 14px;');
+  }
+  if (textColor) styleParts.push(`color:${textColor} !important;`);
+  const boldDefault = !!options.defaultBold;
+  const isBold = boldDefault ? block.bold !== false : !!block.bold;
+  if (isBold) styleParts.push('font-weight:900;');
+  if (block.italic) styleParts.push('font-style:italic;');
+  return { align, style: styleParts.join(' ') };
+}
+
+function renderTextBlock(block, isEditor=false) {
+  const conf = sharedElementStyle(block, isEditor);
+  const html = processRichHTML(block.html || '', isEditor);
+  return `<div class="content-text rich-content" style="${escapeAttr(conf.style)}">${html}</div>`;
+}
+
+function renderSubtitleBlock(block, isEditor=false) {
+  const conf = sharedElementStyle(block, isEditor, { defaultBold: true });
+  return `<h2 class="subtitle-block" style="${escapeAttr(conf.style)}">${escapeHTML(block.text || '')}</h2>`;
+}
+
+function renderButtonBlock(block, isEditor=false) {
+  const align = validChoice(block.align || 'left', ['left','center','right'], 'left');
+  const textColor = resolveElementColor(block.textColor || block.textcolor || '');
+  const themeVar = isEditor ? 'var(--theme-color)' : 'var(--theme)';
+  const styleParts = [];
+  if (block.invert) styleParts.push(`background:#fff; color:${themeVar}; border:2px solid ${themeVar};`);
+  if (textColor) styleParts.push(`color:${textColor} !important;`);
+  if (block.bold) styleParts.push('font-weight:900;');
+  if (block.italic) styleParts.push('font-style:italic;');
+  const src = block.image ? (isEditor ? editorImageSrc(block.image) : exportImageSrc(block.image)) : '';
+  const img = src ? `<img src="${escapeAttr(src)}" alt="">` : '';
+  const tagText = block.tag || '';
+  let textContent = `<span class="button-label">${escapeHTML(block.text || 'Abrir')}</span>`;
+  if (tagText && block.tagNewline) {
+    textContent = `<span class="button-text-wrap"><span class="button-label">${escapeHTML(block.text || 'Abrir')}</span><span class="button-tag tag-below">${escapeHTML(tagText)}</span></span>`;
+  } else if (tagText) {
+    textContent += `<span class="button-tag">${escapeHTML(tagText)}</span>`;
+  }
+  const href = block.url || '#';
+  const onclick = isEditor ? 'return false;' : '';
+  return `<div class="activity-button-block" style="text-align:${escapeAttr(align)}"><a class="link-btn enhanced-link-btn" href="${escapeAttr(href)}" onclick="${onclick}" style="${escapeAttr(styleParts.join(' '))}">${img}${textContent}</a></div>`;
+}
+
+function renderHighlightBlock(block, isEditor=false) {
+  const align = validChoice(block.align || 'left', ['left','center','right'], 'left');
+  const textColor = resolveElementColor(block.textColor || block.textcolor || '');
+  const themeVar = isEditor ? 'var(--theme-color)' : 'var(--theme)';
+  const boxStyleParts = [];
+  const buttonStyleParts = [];
+  if (block.invert) {
+    boxStyleParts.push('background:#fff;');
+    boxStyleParts.push(`border-left-color:${themeVar};`);
+    buttonStyleParts.push(`background:#fff; color:${themeVar}; border:2px solid ${themeVar};`);
+  }
+  if (textColor) buttonStyleParts.push(`color:${textColor} !important;`);
+  if (block.bold) buttonStyleParts.push('font-weight:900;');
+  if (block.italic) buttonStyleParts.push('font-style:italic;');
+  const src = block.image ? (isEditor ? editorImageSrc(block.image) : exportImageSrc(block.image)) : '';
+  const img = src ? `<img src="${escapeAttr(src)}" alt="">` : '';
+  const href = block.url || '#';
+  const onclick = isEditor ? 'return false;' : '';
+  return `<div class="highlight-box" style="text-align:${escapeAttr(align)}; ${escapeAttr(boxStyleParts.join(' '))}"><a class="highlight-btn enhanced-link-btn" href="${escapeAttr(href)}" onclick="${onclick}" style="${escapeAttr(buttonStyleParts.join(' '))}">${img}<span class="button-label">${escapeHTML(block.text || 'Destacado')}</span></a>${block.description ? `<p style="text-align:${escapeAttr(align)}">${nl2br(block.description)}</p>` : ''}</div>`;
+}
+
+
+function renderCardBlock(block, isEditor=false) {
+  const position = validChoice(block.imagePosition || 'top', ['top','left','right'], 'top');
+  const imageAlign = validChoice(block.imageAlign || 'center', ['left','center','right'], 'center');
+  const textAlign = validChoice(block.textAlign || 'left', ['left','center','right','justify'], 'left');
+  const elementAlign = validChoice(block.align || 'left', ['left','center','right'], 'left');
+  const textColor = resolveElementColor(block.textColor || block.textcolor || '');
+  const themeVar = isEditor ? 'var(--theme-color)' : 'var(--theme)';
+  const imageWidth = clampNum(block.imageWidth || 140, 40, 500, 140);
+  const src = block.image ? (isEditor ? editorImageSrc(block.image) : exportImageSrc(block.image)) : '';
+  const cardStyleParts = [];
+  const textStyleParts = [`text-align:${textAlign};`];
+  const titleStyleParts = [];
+  const linkStyleParts = [];
+  if (block.invert) {
+    cardStyleParts.push(`background:${themeVar};`);
+    cardStyleParts.push('color:#ffffff;');
+    cardStyleParts.push('border-radius:12px;');
+    cardStyleParts.push('padding:14px;');
+    cardStyleParts.push('box-shadow:0 3px 12px rgba(0,0,0,.12);');
+    titleStyleParts.push('color:#ffffff;');
+    linkStyleParts.push(`background:#ffffff; color:${themeVar}; border:2px solid #ffffff;`);
+  }
+  if (textColor) {
+    cardStyleParts.push(`color:${textColor} !important;`);
+    titleStyleParts.push(`color:${textColor} !important;`);
+    linkStyleParts.push(`color:${textColor} !important;`);
+  }
+  if (block.bold) cardStyleParts.push('font-weight:900;');
+  if (block.italic) cardStyleParts.push('font-style:italic;');
+  const img = src ? `<div class="card-image-wrap" style="text-align:${escapeAttr(imageAlign)}"><img src="${escapeAttr(src)}" alt="" style="width:${imageWidth}px"></div>` : '';
+  const buttonText = block.btnText || 'Abrir';
+  const button = block.url ? `<p style="margin-top:10px"><a class="link-btn" href="${escapeAttr(block.url)}" onclick="${isEditor ? 'return false;' : ''}" style="${escapeAttr(linkStyleParts.join(' '))}">${escapeHTML(buttonText)}</a></p>` : '';
+  const text = `<div class="card-text" style="${escapeAttr(textStyleParts.join(' '))}"><h3 style="${escapeAttr(titleStyleParts.join(' '))}">${escapeHTML(block.title || '')}</h3><p>${nl2br(block.text || '')}</p>${button}</div>`;
+  return `<div style="text-align:${escapeAttr(elementAlign)}"><div class="card-block card-${escapeAttr(position)}" style="${escapeAttr(cardStyleParts.join(' '))}">${img}${text}</div></div>`;
+}
+function renderImageBlock(block, isEditor=false) {
+  if (!block.image) return '<div class="empty-note">Imagen sin seleccionar.</div>';
+  const align = validChoice(block.align || 'center', ['left','center','right'], 'center');
+  const width = validChoice(String(block.width || '100'), ['25','50','75','100'], '100');
+  const src = isEditor ? editorImageSrc(block.image) : exportImageSrc(block.image);
+  return `<div class="image-block" style="text-align:${escapeAttr(align)}"><img src="${escapeAttr(src)}" alt="" style="width:${escapeAttr(width)}%"><div class="image-caption">${escapeHTML(block.caption || '')}</div></div>`;
+}
+
+function renderVideo(url, title='') {
+  const id = getYouTubeId(url);
+  if (!id) return `<div class="empty-note">Pegá un enlace válido de YouTube.</div>`;
+  return `${title ? `<p class="video-title">${escapeHTML(title)}</p>` : ''}<div class="video-wrap"><iframe loading="lazy" src="https://www.youtube-nocookie.com/embed/${escapeAttr(id)}" title="YouTube video" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe></div>`;
+}
+
+function getYouTubeId(url) {
+  if (!url) return '';
+  try {
+    const u = new URL(url.trim());
+    if (u.hostname.includes('youtu.be')) return u.pathname.split('/').filter(Boolean)[0] || '';
+    if (u.pathname.startsWith('/shorts/')) return u.pathname.split('/').filter(Boolean)[1] || '';
+    if (u.pathname.startsWith('/embed/')) return u.pathname.split('/').filter(Boolean)[1] || '';
+    return u.searchParams.get('v') || '';
+  } catch(e) {
+    const m = String(url).match(/(?:v=|youtu\.be\/|shorts\/|embed\/)([A-Za-z0-9_-]{6,})/);
+    return m ? m[1] : '';
+  }
+}
+
+
+
+const COLOR_PALETTE = {
+  verde: ['Verde', '#27AE60', '#E8F5E9'],
+  naranja: ['Naranja', '#E67E22', '#FFF3E0'],
+  azul: ['Azul', '#036FB0', '#E3F2FD'],
+  rojo: ['Rojo', '#D31718', '#FFEBEE'],
+  celeste: ['Celeste', '#039BE5', '#E1F5FE'],
+  turquesa: ['Turquesa', '#00ACC1', '#E0F7FA'],
+  violeta: ['Violeta', '#7E57C2', '#F3E5F5'],
+  lila: ['Lila', '#AB47BC', '#F8EAF6'],
+  fucsia: ['Fucsia', '#D81B60', '#FCE4EC'],
+  indigo: ['Índigo', '#3F51B5', '#E8EAF6'],
+  lima: ['Lima', '#7CB342', '#F1F8E9'],
+  amarillo: ['Amarillo', '#F9A825', '#FFFDE7'],
+  coral: ['Coral', '#FF7043', '#FBE9E7'],
+  marron: ['Marrón', '#795548', '#EFEBE9'],
+  gris: ['Gris', '#607D8B', '#ECEFF1']
+};
+
+function colorOptionArray(config={}) {
+  const opts = [];
+  if (config.defaultOption) opts.push(['default', config.defaultLabel || 'Usar general']);
+  if (config.theme) opts.push(['theme', config.themeLabel || 'Color de la página']);
+  Object.entries(COLOR_PALETTE).forEach(([key, val]) => opts.push([key, val[0]]));
+  return opts;
+}
+
+function textColorOptionArray(config={}) {
+  const opts = [];
+  if (config.defaultOption) opts.push(['default', config.defaultLabel || 'Automático']);
+  opts.push(['blanco','Blanco'], ['negro','Negro']);
+  Object.entries(COLOR_PALETTE).forEach(([key, val]) => opts.push([key, val[0]]));
+  return opts;
+}
+
+function optionsHTML(options, selected) {
+  return options.map(([v,t]) => `<option value="${escapeAttr(v)}" ${String(selected) === String(v) ? 'selected' : ''}>${escapeHTML(t)}</option>`).join('');
+}
+
+function colorOptionsHTML(selected, config={}) {
+  return optionsHTML(colorOptionArray(config), selected);
+}
+
+function textColorOptionsHTML(selected, config={}) {
+  return optionsHTML(textColorOptionArray(config), selected);
+}
+
+function paletteVars(color, prefix='btn') {
+  if (!COLOR_PALETTE[color]) return '';
+  return `--${prefix}-color:${COLOR_PALETTE[color][1]};--${prefix}-soft:${COLOR_PALETTE[color][2]};`;
+}
+
+function thinButtonColorClass(color) {
+  return COLOR_PALETTE[color] ? ' color-' + color : '';
+}
+function thinButtonTextColorValue(value) {
+  if (value === 'blanco') return '#ffffff';
+  if (value === 'negro') return '#263238';
+  if (COLOR_PALETTE[value]) return COLOR_PALETTE[value][1];
+  return '';
+}
+function thinButtonClasses(button, block) {
+  const style = (button.style && button.style !== 'default') ? button.style : (block.defaultStyle || 'fill');
+  const color = (button.color && button.color !== 'default') ? button.color : (block.defaultColor || 'theme');
+  const textColor = (button.textColor && button.textColor !== 'default') ? button.textColor : (block.defaultTextColor || 'default');
+  const classes = ['thin-btn'];
+  if (style === 'outline') classes.push('outline');
+  if (style === 'soft') classes.push('soft');
+  if (color !== 'theme') classes.push('custom-color' + thinButtonColorClass(color));
+  if (textColor !== 'default') classes.push('custom-text');
+  return classes.join(' ');
+}
+function thinButtonStyle(button, block) {
+  const color = (button.color && button.color !== 'default') ? button.color : (block.defaultColor || 'theme');
+  const textColor = (button.textColor && button.textColor !== 'default') ? button.textColor : (block.defaultTextColor || 'default');
+  const parts = [];
+  const pv = paletteVars(color, 'btn');
+  if (pv) parts.push(pv);
+  const tc = thinButtonTextColorValue(textColor);
+  if (tc) parts.push(`--btn-text:${tc};`);
+  return parts.join('');
+}
+function renderThinButtonBar(block, isEditor=false) {
+  const align = validChoice(block.align || 'center', ['left','center','right'], 'center');
+  const buttons = Array.isArray(block.buttons) ? block.buttons : [];
+  if (!buttons.length) return '<div class="empty-note">Botonera sin botones.</div>';
+  return `<div class="thin-button-bar align-${escapeAttr(align)}">${buttons.map(btn => {
+    const href = btn.url || '#';
+    const onclick = isEditor ? ' onclick="return false;"' : '';
+    return `<a class="${escapeAttr(thinButtonClasses(btn, block))}" style="${escapeAttr(thinButtonStyle(btn, block))}" href="${escapeAttr(href)}"${onclick}>${escapeHTML(btn.text || 'Botón')}</a>`;
+  }).join('')}</div>`;
+}
+
+
+function renderLinkCardBlock(block, isEditor=false) {
+  const titleAlign = validChoice(block.titleAlign || 'center', ['left','center','right'], 'center');
+  const cardStyle = validChoice(block.cardStyle || 'soft', ['white','soft','outline','fill'], 'soft');
+  const buttonStyle = validChoice(block.buttonStyle || 'pills', ['pills','classic','outline','soft'], 'pills');
+  const count = String(block.buttonCount || '2') === '3' ? 3 : 2;
+  const cardVars = paletteVars(block.cardColor || 'theme', 'card');
+  const titleColorValue = (block.titleColor && block.titleColor !== 'theme') ? thinButtonTextColorValue(block.titleColor) : '';
+  const titleStyleParts = [`text-align:${titleAlign};`];
+  if (titleColorValue) titleStyleParts.push(`color:${titleColorValue} !important;`);
+  if (block.titleBold !== false) titleStyleParts.push('font-weight:900;');
+  if (block.titleItalic) titleStyleParts.push('font-style:italic;');
+  const btns = (Array.isArray(block.buttons) ? block.buttons : []).slice(0, count);
+  const buttonsHtml = btns.map(btn => {
+    const href = btn.url || '#';
+    const onclick = isEditor ? ' onclick="return false;"' : '';
+    const style = thinButtonStyle(btn, { defaultColor: 'theme', defaultTextColor: 'default' });
+    const cls = 'link-card-btn' + ((btn.textColor && btn.textColor !== 'default') ? ' custom-text' : '');
+    return `<a class="${escapeAttr(cls)}" style="${escapeAttr(style)}" href="${escapeAttr(href)}"${onclick}>${escapeHTML(btn.text || 'Abrir')}</a>`;
+  }).join('');
+  return `<section class="link-card-block card-${escapeAttr(cardStyle)}" style="${escapeAttr(cardVars)}"><h3 class="link-card-title" style="${escapeAttr(titleStyleParts.join(' '))}">${escapeHTML(block.title || 'Ficha de enlaces')}</h3><div class="link-card-buttons button-${escapeAttr(buttonStyle)}">${buttonsHtml}</div></section>`;
+}
+
+function renderFicha(block, isEditor=false) {
+  const id = 'ficha-' + Math.random().toString(36).slice(2);
+  const hidden = block.collapsed ? 'style="display:none"' : '';
+  return `<section class="ficha-card" data-ficha>
+    <div class="ficha-head"><h3>${escapeHTML(block.title || 'Ficha')}</h3><button type="button" onclick="toggleFicha(this)">${block.collapsed ? 'Abrir' : 'Cerrar'}</button></div>
+    <div class="ficha-content" ${hidden}>
+      <div class="rich-content">${processRichHTML(block.html || '', isEditor)}</div>
+      <div class="ficha-actions">
+        ${block.copy ? '<button type="button" onclick="copyFicha(this)">📋 Copiar</button>' : ''}
+        ${block.print ? '<button type="button" onclick="printFicha(this)">🖨️ Imprimir</button>' : ''}
+      </div>
+    </div>
+  </section>`;
+}
+
+function processRichHTML(html, isEditor=false) {
+  const div = document.createElement('div');
+  div.innerHTML = html || '';
+  div.querySelectorAll('img[data-img]').forEach(img => {
+    const name = img.getAttribute('data-img');
+    img.setAttribute('src', isEditor ? editorImageSrc(name) : exportImageSrc(name));
+  });
+  div.querySelectorAll('[data-youtube]').forEach(box => {
+    const id = box.getAttribute('data-youtube');
+    box.innerHTML = `<div class="video-wrap"><iframe loading="lazy" src="https://www.youtube-nocookie.com/embed/${escapeAttr(id)}" title="YouTube video" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe></div>`;
+  });
+  return div.innerHTML;
+}
+
+function moveBlock(zone, colIdx, idx, delta) {
+  const list = getBlockList(zone, colIdx);
+  const newIdx = idx + delta;
+  if (newIdx < 0 || newIdx >= list.length) return;
+  const [item] = list.splice(idx, 1);
+  list.splice(newIdx, 0, item);
+  render(); scheduleSave();
+}
+function duplicateBlock(zone, colIdx, idx) {
+  const list = getBlockList(zone, colIdx);
+  list.splice(idx + 1, 0, JSON.parse(JSON.stringify(list[idx])));
+  render(); scheduleSave();
+}
+function deleteBlock(zone, colIdx, idx) {
+  if (!confirm('¿Borrar este bloque?')) return;
+  getBlockList(zone, colIdx).splice(idx, 1);
+  render(); scheduleSave();
+}
+
+function editBlock(zone, colIdx, idx) {
+  modalContext = { zone, colIdx, idx, block: JSON.parse(JSON.stringify(getBlockList(zone, colIdx)[idx])) };
+  document.getElementById('blockModalTitle').textContent = 'Editar ' + blockLabel(modalContext.block.type);
+  document.getElementById('blockModalBody').innerHTML = buildBlockForm(modalContext.block);
+  document.getElementById('blockModal').classList.add('open');
+  bindRichEditors();
+}
+function closeBlockModal() { document.getElementById('blockModal').classList.remove('open'); modalContext = null; }
+
+function buildBlockForm(b) {
+  switch(b.type) {
+    case 'text': return richField('html', 'Texto libre', b.html || '') + elementDesignFields(b);
+    case 'subtitle': return textField('text', 'Subtítulo', b.text || '') + elementDesignFields(b, { defaultBold: true });
+    case 'button': return textField('text', 'Título de la actividad', b.text || '') + urlField('url', 'Ruta o Enlace (URL)', b.url || '#') + textField('tag', 'Etiqueta / Tag (opcional)', b.tag || '') + checkboxField('tagNewline', 'Mandar la etiqueta abajo (salto de línea)', !!b.tagNewline) + imagePickerField('image', 'Ilustración opcional desde galería', b.image || '') + elementDesignFields(b);
+    case 'highlight': return textField('text', 'Texto del botón destacado', b.text || '') + urlField('url', 'Enlace', b.url || '#') + textareaField('description', 'Descripción', b.description || '') + imagePickerField('image', 'Ilustración opcional desde galería', b.image || '') + elementDesignFields(b);
+    case 'card': return textField('title', 'Título de la tarjeta', b.title || '') + textareaField('text', 'Descripción breve', b.text || '') + textField('btnText', 'Texto del botón', b.btnText || 'Abrir') + urlField('url', 'Enlace del botón', b.url || '') + imagePickerField('image', 'Imagen / mascota', b.image || '') + selectField('imagePosition', 'Ubicación de la imagen', [['top','Arriba'],['left','Izquierda'],['right','Derecha']], b.imagePosition || 'top') + selectField('imageAlign', 'Alineación de la imagen cuando va arriba', [['left','Izquierda'],['center','Centro'],['right','Derecha']], b.imageAlign || 'center') + numberField('imageWidth', 'Tamaño de imagen en píxeles', b.imageWidth || '140', 40, 500) + selectField('textAlign', 'Alineación del texto interno', [['left','Izquierda'],['center','Centro'],['right','Derecha'],['justify','Justificado']], b.textAlign || 'left') + elementDesignFields(b);
+    case 'image': return imagePickerField('image', 'Imagen', b.image || '') + selectField('align', 'Alineación', [['left','Izquierda'],['center','Centro'],['right','Derecha']], b.align || 'center') + selectField('width', 'Tamaño', [['25','25%'],['50','50%'],['75','75%'],['100','100%']], String(b.width || '100')) + textField('caption', 'Epígrafe', b.caption || '');
+    case 'video': return textField('title', 'Título opcional', b.title || '') + urlField('url', 'Enlace de YouTube', b.url || '');
+    case 'ficha': return textField('title', 'Título de la ficha', b.title || '') + checkboxField('collapsed', 'Empezar cerrada', !!b.collapsed) + checkboxField('copy', 'Mostrar botón copiar', b.copy !== false) + checkboxField('print', 'Mostrar botón imprimir', b.print !== false) + richField('html', 'Contenido', b.html || '');
+    case 'fichagroup': return textField('title', 'Título del grupo', b.title || '') + buildFichaGroupForm(b.fichas || []);
+    case 'thinbuttons': return selectField('align', 'Alineación de la botonera', [['left','Izquierda'],['center','Centro'],['right','Derecha']], b.align || 'center') + selectField('defaultStyle', 'Estilo general', [['fill','Relleno'],['outline','Solo borde'],['soft','Suave']], b.defaultStyle || 'fill') + selectField('defaultColor', 'Color general del botón', colorOptionArray({ theme: true }), b.defaultColor || 'theme') + selectField('defaultTextColor', 'Color general del texto', textColorOptionArray({ defaultOption: true, defaultLabel: 'Automático' }), b.defaultTextColor || 'default') + buildThinButtonsForm(b.buttons || []);
+    case 'linkcard': return textField('title', 'Título de la ficha', b.title || '') + selectField('titleAlign', 'Alineación del título', [['left','Izquierda'],['center','Centro'],['right','Derecha']], b.titleAlign || 'center') + selectField('titleColor', 'Color del título', [['theme','Color de la ficha']].concat(textColorOptionArray({ defaultOption: false })), b.titleColor || 'theme') + checkboxField('titleBold', 'Título en negrita', b.titleBold !== false) + checkboxField('titleItalic', 'Título en cursiva', !!b.titleItalic) + selectField('cardStyle', 'Estilo de ficha', [['white','Blanca con borde superior'],['soft','Fondo suave'],['outline','Solo borde'],['fill','Relleno']], b.cardStyle || 'soft') + selectField('cardColor', 'Color de la ficha', colorOptionArray({ theme: true }), b.cardColor || 'theme') + selectField('buttonCount', 'Cantidad de botones', [['2','2 botones'],['3','3 botones']], String(b.buttonCount || '2')) + selectField('buttonStyle', 'Estilo de botones', [['pills','Grajeas'],['classic','Botones clásicos'],['outline','Solo borde'],['soft','Suave']], b.buttonStyle || 'pills') + buildLinkCardButtonsForm(b.buttons || []);
+    default: return '<p>Tipo no reconocido.</p>';
+  }
+}
+
+function elementDesignFields(b, options={}) {
+  return `<div class="group" style="background:#f7f9fc; color:#263238; border-color:#dce4ed; margin-top:14px;">
+    <h2 style="color:#536273; margin-bottom:10px;">🎨 Diseño del elemento</h2>
+    ${selectField('align', 'Alineación', [['left','Izquierda'],['center','Centro'],['right','Derecha']], b.align || 'left')}
+    ${selectField('textColor', 'Color de texto', textColorOptionArray({ defaultOption: true, defaultLabel: 'Por defecto' }), b.textColor || b.textcolor || 'default')}
+    ${checkboxField('invert', 'Fondo invertido', !!b.invert)}
+    ${checkboxField('bold', 'Negrita', options.defaultBold ? b.bold !== false : !!b.bold)}
+    ${checkboxField('italic', 'Cursiva', !!b.italic)}
+  </div>`;
+}
+
+function textField(name, label, value) { return `<label>${label}</label><input type="text" data-field="${name}" value="${escapeAttr(value)}">`; }
+function urlField(name, label, value) { return `<label>${label}</label><input type="url" data-field="${name}" value="${escapeAttr(value)}">`; }
+function textareaField(name, label, value) { return `<label>${label}</label><textarea data-field="${name}">${escapeHTML(value)}</textarea>`; }
+function checkboxField(name, label, checked) { return `<div class="check-row"><span>${label}</span><input type="checkbox" data-field="${name}" ${checked ? 'checked' : ''}></div>`; }
+function selectField(name, label, options, value) {
+  return `<label>${label}</label><select data-field="${name}">${options.map(([v,t]) => `<option value="${escapeAttr(v)}" ${String(value) === String(v) ? 'selected' : ''}>${escapeHTML(t)}</option>`).join('')}</select>`;
+}
+function numberField(name, label, value, min=0, max=1000) {
+  return `<label>${label}</label><input type="number" min="${escapeAttr(min)}" max="${escapeAttr(max)}" data-field="${name}" value="${escapeAttr(value)}">`;
+}
+function imagePickerField(name, label, value) {
+  return `<label>${label}</label>
+  <div class="row">
+    <input type="text" data-field="${name}" value="${escapeAttr(value)}" placeholder="nombre.png">
+    <button class="btn btn-info" type="button" onclick="chooseImageForField('${name}')">Galería</button>
+  </div>
+  <p class="help">Se guarda solo el nombre. La ruta se calcula al previsualizar o exportar.</p>`;
+}
+function richField(name, label, value) {
+  return `<label>${label}</label>
+  <div class="rich-toolbar">
+    <button class="btn btn-light btn-sm" type="button" onmousedown="event.preventDefault(); richCmd('bold')"><b>B</b></button>
+    <button class="btn btn-light btn-sm" type="button" onmousedown="event.preventDefault(); richCmd('italic')"><i>I</i></button>
+    <button class="btn btn-light btn-sm" type="button" onmousedown="event.preventDefault(); richCmd('underline')"><u>S</u></button>
+    <span class="tool-separator"></span>
+    <button class="btn btn-light btn-sm" type="button" title="Alinear a la izquierda" onmousedown="event.preventDefault(); richCmd('justifyLeft')">⬅️ Izq.</button>
+    <button class="btn btn-light btn-sm" type="button" title="Centrar texto" onmousedown="event.preventDefault(); richCmd('justifyCenter')">↔️ Centro</button>
+    <button class="btn btn-light btn-sm" type="button" title="Alinear a la derecha" onmousedown="event.preventDefault(); richCmd('justifyRight')">➡️ Der.</button>
+    <button class="btn btn-light btn-sm" type="button" title="Justificar texto" onmousedown="event.preventDefault(); richCmd('justifyFull')">☰ Justif.</button>
+    <select class="font-size-select" title="Tamaño de fuente" onchange="if(this.value){richApplyFontSize(this.value); this.value='';}">
+      <option value="">Tamaño...</option>
+      <option value="12px">12 px</option>
+      <option value="14px">14 px</option>
+      <option value="16px">16 px</option>
+      <option value="18px">18 px</option>
+      <option value="20px">20 px</option>
+      <option value="24px">24 px</option>
+      <option value="28px">28 px</option>
+      <option value="32px">32 px</option>
+      <option value="36px">36 px</option>
+    </select>
+    <span class="tool-separator"></span>
+    <button class="btn btn-light btn-sm" type="button" onmousedown="event.preventDefault(); richCmd('insertUnorderedList')">Lista</button>
+    <button class="btn btn-light btn-sm" type="button" onmousedown="event.preventDefault(); insertRichTable()">Tabla</button>
+    <button class="btn btn-info btn-sm" type="button" onclick="insertRichImage()">Imagen</button>
+    <button class="btn btn-light btn-sm" type="button" title="Imagen 25%" onclick="setSelectedImageSize(25)">Img 25%</button>
+    <button class="btn btn-light btn-sm" type="button" title="Imagen 50%" onclick="setSelectedImageSize(50)">Img 50%</button>
+    <button class="btn btn-light btn-sm" type="button" title="Imagen 100%" onclick="setSelectedImageSize(100)">Img 100%</button>
+    <button class="btn btn-light btn-sm" type="button" title="Imagen izquierda" onclick="setSelectedImageAlign('left')">Img izq.</button>
+    <button class="btn btn-light btn-sm" type="button" title="Imagen centrada" onclick="setSelectedImageAlign('center')">Img centro</button>
+    <button class="btn btn-light btn-sm" type="button" title="Imagen derecha" onclick="setSelectedImageAlign('right')">Img der.</button>
+    <button class="btn btn-info btn-sm" type="button" onclick="insertRichVideo()">YouTube</button>
+    <select class="emoji-select" onchange="if(this.value){insertRichEmoji(this.value); this.value='';}">
+      <option value="">Emoji...</option>
+      <option value="😀">😀</option><option value="😉">😉</option><option value="🤔">🤔</option><option value="✅">✅</option><option value="❌">❌</option><option value="⭐">⭐</option><option value="💡">💡</option><option value="📝">📝</option><option value="📚">📚</option><option value="✏️">✏️</option><option value="📐">📐</option><option value="➕">➕</option><option value="➖">➖</option><option value="✖️">✖️</option><option value="➗">➗</option><option value="🐰">🐰</option><option value="🦁">🦁</option><option value="🌳">🌳</option>
+    </select>
+  </div>
+  <div class="rich-editor" contenteditable="true" data-field="${name}">${processRichHTML(value || '', true)}</div>`;
+}
+
+function buildThinButtonsForm(buttons) {
+  const items = Array.isArray(buttons) && buttons.length ? buttons : [];
+  return `<div id="thinButtonEditor">
+    ${items.map((btn, i) => thinButtonItemForm(btn, i)).join('')}
+    <button class="btn btn-info btn-block" type="button" onclick="addThinButtonItem()">Agregar botón</button>
+    <p class="help">Los botones se acomodan solos en una o varias líneas según el ancho disponible. No usan columnas.</p>
+  </div>`;
+}
+function thinButtonItemForm(btn, i) {
+  return `<div class="thin-button-form-item">
+    <div class="row" style="align-items:center;"><strong>Botón ${i+1}</strong><button type="button" class="btn btn-danger btn-sm" onclick="removeThinButtonItem(this)">Borrar botón</button></div>
+    <div class="thin-button-form-grid">
+      <div><label>Texto</label><input type="text" data-thin-field="text" value="${escapeAttr(btn.text || '')}" placeholder="Ej: Caza mayor"></div>
+      <div><label>URL</label><input type="url" data-thin-field="url" value="${escapeAttr(btn.url || '')}" placeholder="cuento.html"></div>
+    </div>
+    <div class="thin-button-form-options">
+      <div><label>Estilo</label><select data-thin-field="style">
+        <option value="default" ${!btn.style || btn.style === 'default' ? 'selected' : ''}>Usar general</option>
+        <option value="fill" ${btn.style === 'fill' ? 'selected' : ''}>Relleno</option>
+        <option value="outline" ${btn.style === 'outline' ? 'selected' : ''}>Solo borde</option>
+        <option value="soft" ${btn.style === 'soft' ? 'selected' : ''}>Suave</option>
+      </select></div>
+      <div><label>Color botón</label><select data-thin-field="color">${colorOptionsHTML(btn.color || 'default', { defaultOption: true, defaultLabel: 'Usar general', theme: true })}</select></div>
+      <div><label>Color texto</label><select data-thin-field="textColor">${textColorOptionsHTML(btn.textColor || 'default', { defaultOption: true, defaultLabel: 'Usar general' })}</select></div>
+      <div style="display:flex; align-items:end; gap:6px;">
+        <button type="button" class="btn btn-light btn-sm" onclick="moveThinButtonItem(this, -1)">↑</button>
+        <button type="button" class="btn btn-light btn-sm" onclick="moveThinButtonItem(this, 1)">↓</button>
+      </div>
+    </div>
+  </div>`;
+}
+function addThinButtonItem() {
+  const box = document.getElementById('thinButtonEditor');
+  const count = box.querySelectorAll(':scope > .thin-button-form-item').length;
+  const btn = box.querySelector('button.btn-info');
+  btn.insertAdjacentHTML('beforebegin', thinButtonItemForm({ text: `Botón ${count+1}`, url: '#', style: 'default', color: 'default', textColor: 'default' }, count));
+}
+function removeThinButtonItem(btn) { btn.closest('.thin-button-form-item').remove(); }
+function moveThinButtonItem(btn, delta) {
+  const item = btn.closest('.thin-button-form-item');
+  const box = document.getElementById('thinButtonEditor');
+  const items = Array.from(box.querySelectorAll(':scope > .thin-button-form-item'));
+  const idx = items.indexOf(item);
+  const newIdx = idx + delta;
+  if (newIdx < 0 || newIdx >= items.length) return;
+  if (delta < 0) box.insertBefore(item, items[newIdx]);
+  else box.insertBefore(items[newIdx], item);
+}
+
+
+function buildLinkCardButtonsForm(buttons) {
+  const items = Array.isArray(buttons) ? buttons : [];
+  const normalized = [0,1,2].map(i => items[i] || { text: i === 0 ? 'Texto' : (i === 1 ? 'Fichas' : 'PDF'), url: '#', color: i === 0 ? 'verde' : (i === 1 ? 'turquesa' : 'violeta'), textColor: 'default' });
+  return `<div id="linkCardButtonsEditor">
+    ${normalized.map((btn, i) => linkCardButtonForm(btn, i)).join('')}
+    <p class="help">Se muestran 2 o 3 botones según el selector. El tercer botón puede quedar cargado aunque no se muestre.</p>
+  </div>`;
+}
+function linkCardButtonForm(btn, i) {
+  return `<div class="link-card-form-item">
+    <strong>Botón ${i+1}</strong>
+    <div class="link-card-form-grid">
+      <div><label>Texto</label><input type="text" data-linkcard-field="text" value="${escapeAttr(btn.text || '')}" placeholder="Ej: Texto"></div>
+      <div><label>URL</label><input type="url" data-linkcard-field="url" value="${escapeAttr(btn.url || '')}" placeholder="cuento.html"></div>
+      <div><label>Color botón</label><select data-linkcard-field="color">${colorOptionsHTML(btn.color || 'theme', { theme: true })}</select></div>
+      <div><label>Color texto</label><select data-linkcard-field="textColor">${textColorOptionsHTML(btn.textColor || 'default', { defaultOption: true, defaultLabel: 'Automático' })}</select></div>
+    </div>
+  </div>`;
+}
+
+function buildFichaGroupForm(fichas) {
+  return `<div id="fichaGroupEditor">
+    ${(fichas || []).map((f, i) => fichaGroupItemForm(f, i)).join('')}
+    <button class="btn btn-info btn-block" type="button" onclick="addFichaGroupItem()">Agregar ficha al grupo</button>
+  </div>`;
+}
+function fichaGroupItemForm(f, i) {
+  return `<div class="group" style="background:#f7f9fc; color:#263238; border-color:#dce4ed;">
+    <div class="row" style="align-items:center;"><strong>Ficha ${i+1}</strong><button type="button" class="btn btn-danger btn-sm" onclick="removeFichaGroupItem(this)">Borrar ficha</button></div>
+    <label>Título</label><input type="text" data-ficha-field="title" value="${escapeAttr(f.title || '')}">
+    <div class="check-row"><span>Empezar cerrada</span><input type="checkbox" data-ficha-field="collapsed" ${f.collapsed ? 'checked' : ''}></div>
+    <div class="check-row"><span>Botón copiar</span><input type="checkbox" data-ficha-field="copy" ${f.copy !== false ? 'checked' : ''}></div>
+    <div class="check-row"><span>Botón imprimir</span><input type="checkbox" data-ficha-field="print" ${f.print !== false ? 'checked' : ''}></div>
+    ${richField('ficha-html-' + i, 'Contenido', f.html || '')}
+  </div>`;
+}
+function addFichaGroupItem() {
+  const box = document.getElementById('fichaGroupEditor');
+  const count = box.querySelectorAll(':scope > .group').length;
+  const btn = box.querySelector('button.btn-info');
+  btn.insertAdjacentHTML('beforebegin', fichaGroupItemForm({ title: `Ficha ${count+1}`, html: '<p>Contenido.</p>', collapsed: true, copy: true, print: true }, count));
+  bindRichEditors();
+}
+function removeFichaGroupItem(btn) { btn.closest('.group').remove(); }
+
+function bindRichEditors() {
+  document.querySelectorAll('.rich-editor').forEach(ed => {
+    ed.addEventListener('focus', () => activeRichEditor = ed);
+    ed.addEventListener('click', (event) => {
+      activeRichEditor = ed;
+      if (event.target && event.target.tagName === 'IMG') selectRichImage(event.target);
+    });
+  });
+}
+function selectRichImage(img) {
+  document.querySelectorAll('.selected-rich-image').forEach(el => el.classList.remove('selected-rich-image'));
+  selectedRichImage = img;
+  selectedRichImage.classList.add('selected-rich-image');
+}
+function requireSelectedImage() {
+  if (!selectedRichImage || !document.body.contains(selectedRichImage)) {
+    alert('Hacé clic sobre una imagen del editor primero.');
+    return null;
+  }
+  return selectedRichImage;
+}
+function setSelectedImageSize(percent) {
+  const img = requireSelectedImage();
+  if (!img) return;
+  img.style.width = percent + '%';
+  img.style.maxWidth = '100%';
+  img.style.height = 'auto';
+  scheduleSave();
+}
+function setSelectedImageAlign(align) {
+  const img = requireSelectedImage();
+  if (!img) return;
+  img.style.display = 'block';
+  img.style.marginTop = '8px';
+  img.style.marginBottom = '8px';
+  if (align === 'center') { img.style.marginLeft = 'auto'; img.style.marginRight = 'auto'; }
+  else if (align === 'right') { img.style.marginLeft = 'auto'; img.style.marginRight = '0'; }
+  else { img.style.marginLeft = '0'; img.style.marginRight = 'auto'; }
+  scheduleSave();
+}
+function cleanRichHTML(html) {
+  const div = document.createElement('div');
+  div.innerHTML = html || '';
+  div.querySelectorAll('.selected-rich-image').forEach(el => el.classList.remove('selected-rich-image'));
+  div.querySelectorAll('img[data-img]').forEach(img => img.removeAttribute('src'));
+  return div.innerHTML;
+}
+function richCmd(cmd, val=null) {
+  if (!activeRichEditor) return alert('Hacé clic dentro del editor de texto primero.');
+  activeRichEditor.focus();
+  document.execCommand(cmd, false, val);
+  scheduleSave();
+}
+function richApplyFontSize(size) {
+  if (!activeRichEditor) return alert('Hacé clic dentro del editor de texto primero.');
+  activeRichEditor.focus();
+  const safeSize = String(size || '').match(/^\d{1,2}px$/) ? String(size) : '16px';
+  document.execCommand('fontSize', false, '7');
+  activeRichEditor.querySelectorAll('font[size="7"]').forEach(font => {
+    const span = document.createElement('span');
+    span.style.fontSize = safeSize;
+    span.innerHTML = font.innerHTML;
+    font.replaceWith(span);
+  });
+  scheduleSave();
+}
+function insertRichTable() {
+  if (!activeRichEditor) return alert('Hacé clic dentro del editor de texto primero.');
+  activeRichEditor.focus();
+  document.execCommand('insertHTML', false, '<table><tbody><tr><td></td><td></td></tr><tr><td></td><td></td></tr></tbody></table>');
+}
+function insertRichEmoji(emoji) { if (!activeRichEditor) return alert('Hacé clic dentro del editor de texto primero.'); activeRichEditor.focus(); document.execCommand('insertText', false, emoji); }
+function insertRichImage() {
+  if (!activeRichEditor) return alert('Hacé clic dentro del editor de texto primero.');
+  const target = activeRichEditor;
+  openGallery(filename => {
+    target.focus();
+    const src = editorImageSrc(filename);
+    document.execCommand('insertHTML', false, `<img data-img="${escapeAttr(filename)}" src="${escapeAttr(src)}" alt="" style="display:block; width:100%; max-width:100%; height:auto; margin:8px auto;">`);
+  });
+}
+function insertRichVideo() {
+  if (!activeRichEditor) return alert('Hacé clic dentro del editor de texto primero.');
+  const url = prompt('Pegá el enlace de YouTube');
+  const id = getYouTubeId(url || '');
+  if (!id) return alert('No parece un enlace válido de YouTube.');
+  activeRichEditor.focus();
+  document.execCommand('insertHTML', false, `<div data-youtube="${escapeAttr(id)}"><div class="video-wrap"><iframe src="https://www.youtube-nocookie.com/embed/${escapeAttr(id)}" allowfullscreen></iframe></div></div>`);
+}
+
+function chooseImageForField(name) {
+  openGallery(filename => {
+    const field = document.querySelector(`[data-field="${CSS.escape(name)}"]`);
+    if (field) field.value = filename;
+  });
+}
+function chooseHeroImage(slot) {
+  openGallery(filename => { if (slot === 1) pageData.heroImage = filename; else pageData.heroImage2 = filename; render(); scheduleSave(); });
+}
+function clearHeroImage(slot) { if (slot === 1) pageData.heroImage = ''; else pageData.heroImage2 = ''; render(); scheduleSave(); }
+
+function saveBlockModal() {
+  if (!modalContext) return;
+  const b = modalContext.block;
+  if (b.type === 'fichagroup') {
+    b.title = getField('title');
+    b.fichas = Array.from(document.querySelectorAll('#fichaGroupEditor > .group')).map((g, idx) => ({
+      title: g.querySelector('[data-ficha-field="title"]').value,
+      collapsed: g.querySelector('[data-ficha-field="collapsed"]').checked,
+      copy: g.querySelector('[data-ficha-field="copy"]').checked,
+      print: g.querySelector('[data-ficha-field="print"]').checked,
+      html: cleanRichHTML(g.querySelector('.rich-editor').innerHTML)
+    }));
+  } else if (b.type === 'thinbuttons') {
+    b.align = getField('align') || 'center';
+    b.defaultStyle = getField('defaultStyle') || 'fill';
+    b.defaultColor = getField('defaultColor') || 'theme';
+    b.defaultTextColor = getField('defaultTextColor') || 'default';
+    b.buttons = Array.from(document.querySelectorAll('#thinButtonEditor > .thin-button-form-item')).map(g => ({
+      text: g.querySelector('[data-thin-field="text"]').value,
+      url: g.querySelector('[data-thin-field="url"]').value,
+      style: g.querySelector('[data-thin-field="style"]').value || 'default',
+      color: g.querySelector('[data-thin-field="color"]').value || 'default',
+      textColor: g.querySelector('[data-thin-field="textColor"]').value || 'default'
+    })).filter(btn => btn.text.trim());
+  } else if (b.type === 'linkcard') {
+    b.title = getField('title') || 'Ficha de enlaces';
+    b.titleAlign = getField('titleAlign') || 'center';
+    b.titleColor = getField('titleColor') || 'theme';
+    b.titleBold = getField('titleBold');
+    b.titleItalic = getField('titleItalic');
+    b.cardStyle = getField('cardStyle') || 'soft';
+    b.cardColor = getField('cardColor') || 'theme';
+    b.buttonCount = getField('buttonCount') || '2';
+    b.buttonStyle = getField('buttonStyle') || 'pills';
+    b.buttons = Array.from(document.querySelectorAll('#linkCardButtonsEditor > .link-card-form-item')).map(g => ({
+      text: g.querySelector('[data-linkcard-field="text"]').value,
+      url: g.querySelector('[data-linkcard-field="url"]').value,
+      color: g.querySelector('[data-linkcard-field="color"]').value || 'theme',
+      textColor: g.querySelector('[data-linkcard-field="textColor"]').value || 'default'
+    })).filter(btn => btn.text.trim());
+  } else {
+    document.querySelectorAll('#blockModalBody [data-field]').forEach(el => {
+      const key = el.getAttribute('data-field');
+      if (el.type === 'checkbox') b[key] = el.checked;
+      else if (el.classList.contains('rich-editor')) b[key] = cleanRichHTML(el.innerHTML);
+      else b[key] = el.value;
+    });
+  }
+  getBlockList(modalContext.zone, modalContext.colIdx)[modalContext.idx] = b;
+  closeBlockModal(); render(); scheduleSave();
+}
+function getField(name) {
+  const el = document.querySelector(`#blockModalBody [data-field="${CSS.escape(name)}"]`);
+  return el ? (el.type === 'checkbox' ? el.checked : el.value) : '';
+}
+
+function openGallery(callback) { Instalacion.openGallery({ onPick: callback }); }
+
+function toggleFicha(btn) {
+  const content = btn.closest('.ficha-card').querySelector('.ficha-content');
+  const isHidden = content.style.display === 'none';
+  content.style.display = isHidden ? 'block' : 'none';
+  btn.textContent = isHidden ? 'Cerrar' : 'Abrir';
+}
+async function copyFicha(btn) {
+  const ficha = btn.closest('.ficha-card');
+  const text = ficha.querySelector('.rich-content')?.innerText || '';
+  try {
+    await navigator.clipboard.writeText(text);
+    const oldText = btn.textContent;
+    btn.textContent = 'Copiado';
+    setTimeout(() => btn.textContent = oldText, 1400);
+  } catch(e) {
+    alert('No se pudo copiar automáticamente.');
+  }
+}
+function printFicha(btn) {
+  const ficha = btn.closest('.ficha-card').cloneNode(true);
+  ficha.querySelectorAll('.ficha-actions,.ficha-head button').forEach(el => el.remove());
+  const w = window.open('', '_blank');
+  if (!w) return alert('El navegador bloqueó la ventana de impresión.');
+  w.document.write('<!DOCTYPE html><html><head><title>Imprimir ficha</title><style>body{font-family:Nunito,Arial,sans-serif;padding:24px}.ficha-head{background:#263238;color:white;padding:12px}.ficha-content{padding:16px}.rich-content img{max-width:100%}table{width:100%;border-collapse:collapse}td,th{border:1px solid #999;padding:6px}</style></head><body>' + ficha.outerHTML + '</body></html>');
+  w.document.close();
+  w.focus();
+  w.print();
+}
+function saveJSON() {
+  const base = safeFilename(pageData.publishFilename || 'pagina.html').replace(/\.html?$/i, '');
+  Instalacion.saveDraft(base + '.json', JSON.stringify(pageData, null, 2));
+}
+function openDrafts() {
+  Instalacion.openDrafts({ onOpen: (text, name) => importProjectText(text, name) });
+}
+function collectUsedImages() {
+  const names = new Set();
+  const add = n => { if (n) names.add(n); };
+  add(pageData.heroImage); add(pageData.heroImage2);
+  const scan = blocks => (blocks || []).forEach(b => {
+    add(b.image);
+    if (b.html) Instalacion.usedImagesFromHTML(b.html).forEach(add);
+    (b.fichas || []).forEach(f => Instalacion.usedImagesFromHTML(f.html).forEach(add));
+  });
+  scan(pageData.topBlocks); (pageData.columns || []).forEach(scan); scan(pageData.bottomBlocks);
+  return Array.from(names);
+}
+function showUsedImages() { Instalacion.openImageReport(collectUsedImages()); }
+
+function newProject() {
+  if (!confirm('¿Empezar un proyecto nuevo? Se perderá lo no guardado.')) return;
+  pageData = createDefaultData(); render(); scheduleSave();
+}
+
+function importProjectText(text, name) {
+  if (!Instalacion.acceptKind(text, name, 'paginas')) return;
+  try {
+    let data;
+    if (/\.json$/i.test(name || '') || String(text).trim().startsWith('{')) data = JSON.parse(text);
+    else {
+      const doc = new DOMParser().parseFromString(text, 'text/html');
+      const state = doc.getElementById('constructor3-state');
+      if (!state) throw new Error('El HTML no contiene estado de Constructor 3.');
+      data = JSON.parse(state.textContent);
+    }
+    pageData = data; ensureDataShape(); render(); scheduleSave();
+    Instalacion.toast('✅ Abierto: ' + (name || 'proyecto'));
+  } catch (e) { alert('No se pudo abrir: ' + e.message); }
+}
+
+function previewHTML() {
+  const w = window.open('', '_blank');
+  if (!w) {
+    alert('El navegador bloqueó la vista previa. Permití ventanas emergentes para este sitio.');
+    return;
+  }
+  try {
+    const html = getFinalHTML({ preview: true });
+    w.document.open();
+    w.document.write(html);
+    w.document.close();
+  } catch (e) {
+    try { w.close(); } catch (_) {}
+    console.error(e);
+    alert('No se pudo abrir la vista previa: ' + e.message);
+  }
+}
+
+function downloadHTML() {
+  const html = getFinalHTML();
+  Instalacion.savePublish(safeFilename(pageData.publishFilename || 'pagina.html'), html);
+}
+
+function safeFilename(name) {
+  let n = String(name || 'pagina.html').trim().replace(/[^a-zA-Z0-9._-]/g, '-');
+  if (!/\.html?$/i.test(n)) n += '.html';
+  return n;
+}
+
+function getFinalHTML(options = {}) {
+  previewMode = !!options.preview;
+  try { return buildFinalHTML(options); } finally { previewMode = false; }
+}
+
+function buildFinalHTML(options = {}) {
+  const stateJSON = JSON.stringify(pageData).replace(/</g, '\\u003c');
+  const theme = THEMES[pageData.theme] || THEMES.lengua;
+  const nav = renderFinalNav();
+  const top = pageData.topBlocks.map(b => renderFinalBlock(b)).join('\n');
+  const cols = pageData.columns.slice(0, pageData.colCount).map((blocks, i) => {
+    const cfg = normalizeColumnConfig(pageData.columnTitles[i], i);
+    const bg = cfg.bgStyle === 'soft' ? 'background:var(--soft);' : '';
+    const vars = getColumnStyleVars(i);
+    const titleColor = getColumnTitleColor(i);
+    return `<section class="column" style="${escapeAttr(vars + bg)}"><h2 style="color:${escapeAttr(titleColor)}">${escapeHTML(cfg.text || '')}</h2>${blocks.map(b => renderFinalBlock(b)).join('\n')}</section>`;
+  }).join('\n');
+  const bottom = pageData.bottomBlocks.map(b => renderFinalBlock(b)).join('\n');
+  const analyticsCode = `<script async src="https://www.googletagmanager.com/gtag/js?id=G-VL13MMLPRV"><\/script>\n<script>\n  window.dataLayer = window.dataLayer || [];\n  function gtag(){dataLayer.push(arguments);}\n  gtag('js', new Date());\n  gtag('config', 'G-VL13MMLPRV');\n<\/script>`;
+  const finalHtml = `<!DOCTYPE html>
+<html lang="es">
+<head>
+${options.preview ? '' : analyticsCode}
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>${escapeHTML(pageData.title)}</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--theme:${theme.color};--soft:${theme.soft};--title:${theme.title};--text:#263238;--surface:#fff;}
+*{box-sizing:border-box} body{margin:0;background:var(--soft);font-family:'Nunito',sans-serif;color:var(--text);line-height:1.5}.site-nav{background:#2c3e50;color:#fff;padding:10px 18px;display:flex;justify-content:space-between;align-items:center;gap:20px;flex-wrap:wrap;box-shadow:0 3px 10px rgba(0,0,0,.22);position:sticky;top:0;z-index:10}.site-nav img{height:54px;max-width:220px;object-fit:contain}.site-nav nav{display:flex;gap:18px;align-items:center;flex-wrap:wrap}.site-nav a{color:#fff;text-decoration:none;font-weight:800;font-size:.95rem}.site-nav .back-link{color:#ffde72;border-left:1px solid rgba(255,255,255,.35);padding-left:18px}.page-header{background:var(--theme);color:#fff;padding:42px 20px}.hero-inner{max-width:1100px;margin:0 auto;display:flex;align-items:center;justify-content:center;gap:24px}.hero-inner.img-top{flex-direction:column;text-align:center}.hero-inner.center{text-align:center}.hero-text{flex:1;min-width:0}.hero-text h1{margin:0 0 8px;font-size:clamp(2rem,4vw,3rem);line-height:1.05}.hero-text p{margin:0;font-size:1.15rem;opacity:.93}.hero-img{max-height:150px;max-width:190px;object-fit:contain;filter:drop-shadow(0 8px 12px rgba(0,0,0,.18))}.page-wrap{max-width:1100px;margin:0 auto;padding:28px 20px 70px}.full-zone{margin-bottom:24px}.columns-grid{display:grid;grid-template-columns:repeat(${pageData.colCount},minmax(0,1fr));gap:22px}.column{background:#fff;border-radius:14px;padding:18px;box-shadow:0 3px 14px rgba(0,0,0,.08);border-top:5px solid var(--theme)}.column h2{margin:0 0 14px;color:var(--theme);font-size:1.25rem}.block{margin:0 0 16px}.subtitle-block{color:var(--theme);font-size:1.35rem;font-weight:900;border-bottom:2px solid rgba(0,0,0,.08);padding-bottom:6px}.link-btn,.highlight-btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;text-decoration:none;border-radius:999px;padding:11px 18px;font-weight:900;background:var(--theme);color:white}.activity-button-block{margin:4px 0}.enhanced-link-btn{width:260px;max-width:100%;min-height:64px;vertical-align:middle;text-align:center;white-space:normal}.enhanced-link-btn img{width:32px;height:32px;object-fit:contain;border-radius:6px;margin-right:10px;flex-shrink:0;background:rgba(255,255,255,.35)}.enhanced-link-btn .button-label{display:inline-block;overflow-wrap:anywhere}.enhanced-link-btn .button-text-wrap{display:inline-flex;flex-direction:column;align-items:center;justify-content:center;line-height:1.15;flex:1;min-width:0}.enhanced-link-btn .button-tag{font-size:.75rem;background:#e1f5fe;color:#0277bd;padding:2px 6px;border-radius:6px;margin-left:8px;font-weight:900;white-space:nowrap}.enhanced-link-btn .button-tag.tag-below{margin-left:0;margin-top:5px;display:inline-block}.highlight-box{background:var(--soft);border:1px solid rgba(0,0,0,.08);border-left:5px solid var(--theme);border-radius:12px;padding:14px}.card-block{display:flex;gap:14px;align-items:center}.card-block.card-top{flex-direction:column;align-items:stretch}.card-block.card-right{flex-direction:row-reverse}.card-block .card-image-wrap{flex-shrink:0}.card-block.card-top .card-image-wrap{width:100%}.card-block .card-text{flex:1;min-width:0}.card-block img{max-height:180px;object-fit:contain;border-radius:10px;background:#f6f8fb}.card-block h3{margin:0 0 6px;color:var(--theme)}.image-block{text-align:center}.image-block img,.rich-content img{max-width:100%;height:auto;border-radius:10px}.image-caption{text-align:center;font-size:.86rem;color:#667788;margin-top:6px}.text-editor-cta-wrap{text-align:center;margin:26px auto 0;padding:0 20px}.text-editor-cta{display:inline-flex;align-items:center;justify-content:center;gap:8px;text-decoration:none;border-radius:999px;padding:13px 24px;font-weight:900;background:#fff;color:var(--theme);box-shadow:0 4px 14px rgba(0,0,0,.16);border:2px solid rgba(255,255,255,.75)}.text-editor-cta:hover{filter:brightness(.98);transform:translateY(-1px)}.video-wrap{position:relative;width:100%;padding-top:56.25%;border-radius:12px;overflow:hidden;background:#111;box-shadow:0 2px 12px rgba(0,0,0,.14)}.video-wrap iframe{position:absolute;inset:0;width:100%;height:100%;border:0}.video-title{font-weight:900;color:var(--theme);margin:0 0 8px}.ficha-card{background:#fff;border-radius:14px;border:1px solid #dfe6ef;overflow:hidden;box-shadow:0 3px 12px rgba(0,0,0,.08);margin-bottom:14px}.ficha-head{background:var(--theme);color:white;padding:12px 14px;display:flex;justify-content:space-between;align-items:center;gap:12px}.ficha-head h3{margin:0;font-size:1.05rem}.ficha-head button{background:rgba(255,255,255,.2);color:#fff;border:1px solid rgba(255,255,255,.35);border-radius:8px;padding:6px 8px;cursor:pointer;font-weight:900}.ficha-content{padding:16px}.ficha-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}.ficha-actions button{border:none;border-radius:8px;padding:8px 10px;font-weight:900;cursor:pointer;background:#eef2f7;color:#263238}.fichas-stack{display:grid;gap:14px}.thin-button-bar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:6px 0}.thin-button-bar.align-left{justify-content:flex-start}.thin-button-bar.align-center{justify-content:center}.thin-button-bar.align-right{justify-content:flex-end}.thin-btn{display:inline-flex;align-items:center;justify-content:center;width:260px;min-height:34px;padding:7px 14px;border-radius:999px;border:2px solid var(--theme);background:var(--theme);color:#fff;text-decoration:none;font-weight:900;line-height:1.1;box-shadow:0 1px 4px rgba(0,0,0,.06);transition:.16s ease;max-width:100%;overflow-wrap:anywhere;text-align:center}.thin-btn:hover{filter:brightness(.98);transform:translateY(-1px)}.thin-btn.outline{background:#fff;color:var(--theme)}.thin-btn.soft{background:var(--soft);color:var(--theme);border-color:rgba(0,0,0,.06)}.thin-btn.custom-color{border-color:var(--btn-color);background:var(--btn-color);color:#fff}.thin-btn.custom-color.outline{background:#fff;color:var(--btn-color)}.thin-btn.custom-color.soft{background:var(--btn-soft);color:var(--btn-color);border-color:rgba(0,0,0,.06)}.thin-btn.custom-text{color:var(--btn-text)!important}.link-card-block{--card-color:var(--theme);--card-soft:var(--soft);background:#fff;border:1px solid #dfe6ef;border-top:5px solid var(--card-color);border-radius:16px;box-shadow:0 3px 12px rgba(0,0,0,.08);padding:14px;transition:.18s ease}.link-card-block:hover{transform:translateY(-2px);box-shadow:0 8px 22px rgba(0,0,0,.12)}.link-card-block.card-soft{background:var(--card-soft);border-color:rgba(0,0,0,.07);border-top-color:var(--card-color)}.link-card-block.card-outline{background:#fff;border:2px solid var(--card-color)}.link-card-block.card-fill{background:var(--card-color);border-color:var(--card-color);color:#fff}.link-card-block.card-fill .link-card-title{color:#fff}.link-card-title{margin:0 0 12px;color:var(--card-color);font-size:1.15rem;line-height:1.2;font-weight:900;overflow-wrap:anywhere}.link-card-buttons{display:flex;gap:10px;align-items:stretch;justify-content:center;flex-wrap:nowrap}.link-card-btn{--btn-color:var(--theme);--btn-soft:var(--soft);flex:1 1 0;min-width:0;min-height:40px;display:inline-flex;align-items:center;justify-content:center;text-align:center;text-decoration:none;border:2px solid var(--btn-color);background:var(--btn-color);color:#fff;border-radius:999px;padding:8px 12px;font-weight:900;line-height:1.1;overflow-wrap:anywhere;transition:.16s ease;box-shadow:0 2px 8px rgba(0,0,0,.08)}.link-card-btn:hover{transform:translateY(-2px);filter:brightness(.98);box-shadow:0 6px 16px rgba(0,0,0,.14)}.link-card-buttons.button-classic .link-card-btn{border-radius:12px;min-height:48px}.link-card-buttons.button-outline .link-card-btn{background:#fff;color:var(--btn-color)}.link-card-buttons.button-soft .link-card-btn{background:var(--btn-soft);color:var(--btn-color);border-color:rgba(0,0,0,.06)}.link-card-btn.custom-text{color:var(--btn-text)!important}@media(max-width:720px){.link-card-buttons{flex-wrap:wrap}.link-card-btn{flex-basis:100%}}.group-title{margin:0 0 12px;color:var(--theme);font-weight:900}.rich-content table{width:100%;border-collapse:collapse;margin:10px 0}.rich-content td,.rich-content th{border:1px solid #999;padding:6px}@media(max-width:850px){.columns-grid{grid-template-columns:1fr}.hero-inner{flex-direction:column!important;text-align:center!important}.card-block{flex-direction:column;text-align:center}.site-nav{justify-content:center}.site-nav nav{justify-content:center}.site-nav .back-link{border-left:0;padding-left:0}}
+@media print{.site-nav,.ficha-actions,.ficha-head button{display:none!important}body{background:white}.column,.ficha-card{box-shadow:none}.columns-grid{display:block}.column{margin-bottom:18px}}
+</style>
+</head>
+<body>
+${nav}
+${renderHero(false)}
+<main class="page-wrap">
+  <section class="full-zone">${top}</section>
+  <section class="columns-grid">${cols}</section>
+  <section class="full-zone">${bottom}</section>
+</main>
+<script id="constructor3-state" type="application/json">${stateJSON}<\/script>
+<script>
+function toggleFicha(btn){const c=btn.closest('.ficha-card').querySelector('.ficha-content');const isHidden=c.style.display==='none';c.style.display=isHidden?'block':'none';btn.textContent=isHidden?'Cerrar':'Abrir';}
+async function copyFicha(btn){const ficha=btn.closest('.ficha-card');const text=ficha.querySelector('.rich-content').innerText;try{await navigator.clipboard.writeText(text);btn.textContent='Copiado';setTimeout(()=>btn.textContent='Copiar',1400);}catch(e){alert('No se pudo copiar automáticamente.');}}
+function printFicha(btn){const ficha=btn.closest('.ficha-card').cloneNode(true);ficha.querySelectorAll('.ficha-actions,.ficha-head button').forEach(el=>el.remove());const w=window.open('', '_blank');w.document.write('<!DOCTYPE html><html><head><title>Imprimir ficha</title><style>body{font-family:Nunito,Arial,sans-serif;padding:24px}.ficha-head{background:${theme.color};color:white;padding:12px}.ficha-content{padding:16px}.rich-content img{max-width:100%}table{width:100%;border-collapse:collapse}td,th{border:1px solid #999;padding:6px}</style></head><body>'+ficha.outerHTML+'</body></html>');w.document.close();w.focus();w.print();}
+<\/script>
+<div id="contenedor-pie"></div>
+<script>
+  fetch('/pie.html')
+    .then(response => {
+      if (response.ok) return response.text();
+      throw new Error('No se pudo cargar el pie de página');
+    })
+    .then(data => {
+      document.getElementById('contenedor-pie').innerHTML = data;
+    })
+    .catch(error => console.error('Error:', error));
+<\/script>
+<script src="/volver.js" defer><\/script>
+</body>
+</html>`;
+  return finalHtml;
+}
+
+
+function renderFinalNav() {
+  // La barra con los 4 enlaces ya no se usa: las páginas cargan /volver.js (logo chico + Volver inteligente).
+  return '';
+  if (pageData.navType === 'none') return '';
+  let prefix = pageData.navType === 'root' ? '' : '../';
+  let back = '';
+  if (pageData.navType === 'back') back = `<a class="back-link" href="${escapeAttr(pageData.backHref || 'index.html')}">⬅ ${escapeHTML(pageData.backText || 'Volver')}</a>`;
+  return `<header class="site-nav"><a href="${prefix}index.html"><img src="${prefix}logo.png" alt="Logo"></a><nav><a href="${prefix}lengua.html">Lengua</a><a href="${prefix}matematica.html">Matemática</a><a href="${prefix}recursos.html">Recursos</a><a href="${prefix}diseno.html">Diseño</a>${back}</nav></header>`;
+}
+function renderFinalBlock(block) { return `<div class="block">${renderBlockPreview(block, false)}</div>`; }
+
+async function init() {
+  document.body.style.opacity = 1;
+  Instalacion.configure({ kind: 'paginas' });
+  await Instalacion.init();
+  Instalacion.mountStatus('instStatus');
+  Instalacion.onChange(() => render());
+  loadLocal(); ensureDataShape(); bindControls(); render();
+  document.addEventListener('keydown', e => {
+    if ((e.ctrlKey || e.metaKey) && String(e.key).toLowerCase() === 's') { e.preventDefault(); saveJSON(); }
+  });
+}
+init();
+</script>
+</body>
+</html>

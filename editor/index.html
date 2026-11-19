@@ -1,0 +1,2027 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Editor de documentos (local)</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+
+<script src="../instalacion.js"></script>
+
+<style id="dynamic-print-style">
+@page { size: A4; margin: 1cm 1cm 1cm 1cm; }
+</style>
+
+<style>
+:root{
+    --bg:#E3F2FD;
+    --header:#036FB0;
+    --header-dark:#01579B;
+    --accent:#FF7043;
+    --toolbar:#F5FAFF;
+    --border:#BBDEFB;
+    --surface:#fff;
+    --text:#263238;
+    --m-top:1cm;
+    --m-right:1cm;
+    --m-bottom:1cm;
+    --m-left:1cm;
+}
+*{box-sizing:border-box}
+body{
+    opacity:0;
+    transition:opacity .25s ease-in;
+    margin:0;
+    font-family:'Nunito',Arial,sans-serif;
+    background:var(--bg);
+    color:var(--text);
+    padding:18px;
+    padding-bottom:120px;
+}
+#app-container{max-width:1180px;margin:0 auto}
+.topbar{
+    background:var(--surface);
+    border-top:5px solid var(--header);
+    border-radius:13px;
+    box-shadow:0 4px 14px rgba(0,0,0,.10);
+    padding:10px 12px;
+    margin-bottom:10px;
+}
+.config-grid{
+    display:grid;
+    grid-template-columns:minmax(280px,2fr) minmax(170px,.85fr) auto;
+    gap:8px;
+    align-items:end;
+}
+.field label{display:block;font-size:.76rem;font-weight:800;color:#546E7A;margin-bottom:2px;line-height:1.1}
+.field input,.field select{
+    width:100%; border:1px solid #CFD8DC; border-radius:8px; padding:6px 8px;
+    font-family:'Nunito',Arial,sans-serif; font-size:.9rem; background:white; min-height:34px;
+}
+.compact-actions{display:flex;gap:6px;align-items:end;justify-content:flex-end;white-space:nowrap}
+.icon-action{
+    width:34px;height:34px;border:1px solid #CFD8DC;border-radius:8px;background:white;color:#455A64;
+    cursor:pointer;display:inline-flex;align-items:center;justify-content:center;font-size:18px;font-weight:800;
+}
+.icon-action:hover{background:#E3F2FD;border-color:#29B6F6;color:#01579B;transform:translateY(-1px)}
+.margin-row{
+    margin-top:7px;
+    display:flex;
+    align-items:center;
+    gap:8px;
+    flex-wrap:wrap;
+}
+.margin-row .field{min-width:220px;max-width:320px;flex:0 1 280px}
+.margin-panel{
+    display:none;
+    align-items:center;
+    gap:6px;
+    flex-wrap:wrap;
+    background:#F5F7FA;
+    border:1px solid #CFD8DC;
+    border-radius:10px;
+    padding:5px 7px;
+}
+.margin-mini{
+    display:flex;
+    align-items:center;
+    gap:4px;
+    font-weight:800;
+    color:#546E7A;
+}
+.margin-mini input{
+    width:58px;
+    min-height:30px;
+    padding:4px 6px;
+    border:1px solid #CFD8DC;
+    border-radius:8px;
+    font-family:'Nunito',Arial,sans-serif;
+    font-size:.9rem;
+}
+.status{
+    font-size:.78rem; color:#546E7A; padding:6px 0 0; display:flex; gap:6px; flex-wrap:wrap; align-items:center;
+}
+.badge{background:#ECEFF1;border-radius:999px;padding:3px 8px;font-weight:800;line-height:1.2}
+.badge.ok{background:#E8F5E9;color:#2E7D32}
+.badge.warn{background:#FFF3E0;color:#EF6C00}
+
+.main-toolbar{
+    position:sticky; top:10px; z-index:900;
+    background:#263238; color:white; padding:8px; border-radius:12px;
+    display:flex; flex-wrap:wrap; gap:6px; align-items:center;
+    max-width:1180px; margin:0 auto 16px auto;
+    box-shadow:0 3px 14px rgba(0,0,0,.16);
+}
+.tool-btn{
+    background:white; color:#455A64; border:1px solid #CFD8DC; border-radius:6px;
+    min-height:33px; padding:5px 9px; cursor:pointer; font-family:'Nunito',Arial,sans-serif;
+    display:flex; align-items:center; gap:5px; font-weight:700;
+}
+.tool-btn:hover{background:#E3F2FD;border-color:#29B6F6;color:#01579B}
+.tool-btn.icon{min-width:34px; justify-content:center; padding:5px}
+.tool-select{
+    min-height:33px; border:1px solid #CFD8DC; border-radius:6px; padding:5px;
+    font-family:'Nunito',Arial,sans-serif; background:white; color:#455A64;
+}
+.separator{width:1px;height:26px;background:#78909C;margin:0 3px}
+
+.canvas-stage{display:flex; justify-content:center; align-items:flex-start; width:100%}
+.canvas-shell{
+    width:min(100%, 210mm);
+    position:relative;
+    overflow-x:auto;
+}
+.doc-canvas{
+    width:210mm;
+    max-width:100%;
+    min-height:297mm;
+    background:white;
+    margin:0 auto 24px;
+    box-shadow:0 5px 18px rgba(0,0,0,.18);
+    border:1px solid #E0E0E0;
+    padding:var(--m-top) var(--m-right) var(--m-bottom) var(--m-left);
+    outline:none;
+    line-height:1.5;
+    font-size:16px;
+    color:#222;
+    position:relative;
+    z-index:1;
+    overflow:visible;
+    -webkit-print-color-adjust:exact;
+    print-color-adjust:exact;
+}
+.doc-canvas:empty:before{content:'Escribí aquí...';color:#B0BEC5;pointer-events:none}
+.doc-canvas img{
+    max-width:100%;
+    height:auto;
+    cursor:pointer;
+    display:block;
+    margin:10px 0;
+}
+.doc-canvas table{
+    border-collapse:collapse;
+    width:100%;
+    margin:10px 0;
+    border:1px solid #000;
+    table-layout:fixed !important;
+}
+.doc-canvas td,.doc-canvas th{
+    border:1px solid #000;
+    padding:8px;
+    vertical-align:top;
+    overflow-wrap:anywhere;
+    word-break:break-word;
+    box-sizing:border-box;
+    min-width:0;
+}
+.doc-canvas p,.doc-canvas div,.doc-canvas h1,.doc-canvas h2,.doc-canvas h3,.doc-canvas h4,.doc-canvas ul,.doc-canvas ol,.doc-canvas li{
+    margin-top:0!important;
+    margin-bottom:0!important;
+}
+.page-marker-layer{
+    position:absolute;
+    left:0;
+    top:0;
+    width:210mm;
+    max-width:100%;
+    pointer-events:none;
+    z-index:5;
+}
+.page-marker{
+    position:absolute;
+    left:0;
+    right:0;
+    border-top:2px dashed rgba(211,47,47,.7);
+}
+.page-marker::before{
+    content:'';
+    position:absolute;
+    left:0;
+    right:0;
+    top:0;
+    height:var(--m-bottom);
+    background:rgba(255,235,238,.28);
+}
+.page-marker span{
+    position:absolute;
+    right:8px;
+    top:-15px;
+    background:#FFEBEE;
+    color:#B71C1C;
+    border:1px solid #EF9A9A;
+    border-radius:999px;
+    padding:2px 8px;
+    font-size:.72rem;
+    font-weight:800;
+}
+.page-physical-marker{
+    position:absolute;
+    left:0;
+    right:0;
+    border-top:1px dotted rgba(120,144,156,.65);
+}
+.page-physical-marker span{
+    position:absolute;
+    left:8px;
+    top:-13px;
+    background:#ECEFF1;
+    color:#455A64;
+    border:1px solid #CFD8DC;
+    border-radius:999px;
+    padding:1px 7px;
+    font-size:.68rem;
+    font-weight:800;
+}
+.manual-page-break{
+    height:0;
+    border-top:2px dashed #1976D2;
+    margin:18px 0;
+    break-after:page;
+    page-break-after:always;
+    position:relative;
+}
+.manual-page-break:after{
+    content:'Salto de página';
+    position:absolute;
+    right:0;
+    top:-14px;
+    background:#E3F2FD;
+    color:#01579B;
+    border:1px solid #90CAF9;
+    border-radius:999px;
+    padding:2px 8px;
+    font-size:.72rem;
+    font-weight:800;
+}
+
+.modal-overlay{
+    display:none; position:fixed; inset:0; background:rgba(0,0,0,.52); z-index:2000;
+    align-items:center; justify-content:center; padding:18px;
+}
+.modal{
+    background:white; border-radius:14px; box-shadow:0 12px 32px rgba(0,0,0,.25);
+    width:min(760px, calc(100vw - 32px)); max-height:90vh; overflow:auto;
+}
+.modal-header{
+    padding:14px 16px; border-bottom:1px solid #ECEFF1; display:flex; justify-content:space-between; gap:12px; align-items:center;
+}
+.modal-header h2{margin:0;color:#263238;font-size:1.15rem}
+.modal-body{padding:16px}
+.modal-footer{padding:12px 16px; border-top:1px solid #ECEFF1; display:flex; justify-content:flex-end; gap:8px}
+.modal-btn{border:none;border-radius:8px;padding:9px 13px;cursor:pointer;font-weight:800;font-family:'Nunito',Arial}
+.primary{background:var(--header);color:white}
+.light{background:#ECEFF1;color:#263238}
+.danger-bg{background:#D32F2F;color:white}
+
+.gallery-actions{display:flex;gap:10px;align-items:end;flex-wrap:wrap;margin-bottom:12px}
+.gallery-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:10px}
+.gallery-item{border:1px solid #CFD8DC;border-radius:10px;padding:8px;background:#FAFAFA;cursor:pointer;text-align:center}
+.gallery-item:hover{border-color:#29B6F6;background:#E3F2FD}
+.gallery-item img{max-width:100%;height:80px;object-fit:contain;display:block;margin:0 auto 6px}
+.gallery-item span{font-size:.78rem;word-break:break-word;color:#455A64}
+.list-item{
+    border:1px solid #CFD8DC; border-radius:10px; padding:10px; margin-bottom:8px;
+    display:flex; justify-content:space-between; gap:10px; align-items:center; background:#FAFAFA;
+}
+.list-item strong{display:block;color:#263238}
+.list-item small{color:#607D8B}
+.list-actions{display:flex;gap:6px;flex-wrap:wrap}
+
+/* Tabla */
+#table-floating-menu{
+    display:none; position:fixed; z-index:1800; background:white; border:1px solid #B0BEC5;
+    padding:8px; border-radius:10px; box-shadow:0 4px 15px rgba(0,0,0,.25); width:min(330px,94vw); overflow:auto;
+}
+.tf-head{display:flex;justify-content:space-between;align-items:center;font-weight:800;color:#01579B;margin-bottom:4px}
+.tf-btn.on{background:#036FB0;color:#fff;border-color:#036FB0}
+.tf-color-circle:hover{transform:scale(1.15)}
+body.tbl-resizing, body.tbl-resizing *{user-select:none!important;cursor:col-resize!important}
+body.tbl-resizing-row, body.tbl-resizing-row *{user-select:none!important;cursor:row-resize!important}
+.tf-label{font-size:.76rem;font-weight:800;color:#607D8B;margin:4px 0}
+.tf-section{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:8px;padding-bottom:8px;border-bottom:1px solid #ECEFF1}
+.tf-section:last-child{border-bottom:none;margin-bottom:0;padding-bottom:0}
+.tf-btn{background:#F5F7FA;border:1px solid #CFD8DC;border-radius:6px;padding:5px 8px;cursor:pointer;font-weight:700}
+.tf-btn:hover{background:#E3F2FD}
+.tf-color-circle{width:22px;height:22px;border-radius:50%;border:1px solid #999;cursor:pointer}
+
+.table-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-top:10px}
+.table-grid label{display:block;font-weight:800;color:#546E7A;font-size:.87rem;margin-bottom:4px}
+.table-grid input,.table-grid select{width:100%;padding:8px;border:1px solid #CFD8DC;border-radius:8px}
+.check-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-top:10px}
+.check-grid label{font-weight:800;background:#F5F7FA;padding:8px;border-radius:8px}
+
+/* Barra flotante de bloque */
+#block-bar{display:none;position:fixed;z-index:1700;background:#fff;border:1px solid #90CAF9;border-radius:10px;box-shadow:0 4px 16px rgba(0,0,0,.2);padding:3px;gap:2px;align-items:center;font-family:'Nunito',sans-serif}
+#block-bar button,#block-bar select{border:0;background:#F5F7FA;border-radius:7px;padding:5px 8px;cursor:pointer;font-weight:800;font-size:.8rem;color:#37474F;font-family:inherit}
+#block-bar button:hover{background:#E3F2FD;color:#01579B}
+#block-bar button.danger:hover{background:#FFEBEE;color:#B71C1C}
+#block-bar .bb-sep{width:1px;height:20px;background:#CFD8DC;margin:0 3px}
+.doc-canvas .doc-lines{user-select:none;-webkit-user-select:none;cursor:default}
+.doc-canvas .doc-lines:hover{outline:1px dashed #90CAF9}
+.doc-canvas .block-active{outline:2px solid #29B6F6;outline-offset:2px}
+.resp-opt{display:flex;gap:5px;margin:4px 0 8px}
+.resp-opt button{flex:1;border:1px solid #CFD8DC;background:#F5F7FA;border-radius:8px;padding:5px 4px;cursor:pointer;font-weight:800;font-size:.78rem;color:#37474F}
+.resp-opt button.on{background:#036FB0;color:#fff;border-color:#036FB0}
+.resp-hint{font-size:.74rem;color:#78909C;margin-top:8px;line-height:1.3}
+/* Popups */
+#emoji-popup,#color-popup,#quick-block-popup,#response-popup{
+    display:none; position:absolute; z-index:1600; background:white; border:1px solid #CFD8DC;
+    padding:10px; border-radius:10px; box-shadow:0 5px 20px rgba(0,0,0,.16);
+}
+#emoji-popup{width:300px;max-height:260px;overflow:auto}
+.emoji-grid{display:grid;grid-template-columns:repeat(8,1fr);gap:5px}
+.emoji-btn{border:none;background:transparent;font-size:20px;cursor:pointer;border-radius:5px}
+.emoji-btn:hover{background:#ECEFF1}
+.popup-category-title,.quick-menu-title{font-size:.82rem;font-weight:800;color:#546E7A;margin:5px 0}
+.color-opt{width:25px;height:25px;border-radius:50%;display:inline-block;cursor:pointer;margin:0 3px;border:1px solid #999}
+#quick-block-popup,#response-popup{width:270px}
+.quick-menu-grid{display:grid;grid-template-columns:1fr;gap:6px}
+.quick-menu-btn{background:#F5F7FA;border:1px solid #CFD8DC;border-radius:8px;padding:7px 9px;cursor:pointer;text-align:left;font-weight:800;color:#37474F}
+.quick-menu-btn:hover{background:#E3F2FD;border-color:#29B6F6;color:#01579B}
+.doc-canvas table.doc-quick-table,
+.doc-canvas table.doc-response-table{
+    width:100%;
+    border:none!important;
+    border-collapse:separate!important;
+    border-spacing:0!important;
+    table-layout:fixed!important;
+    margin:12px 0;
+    -webkit-print-color-adjust:exact;
+    print-color-adjust:exact;
+}
+.doc-canvas table.doc-quick-table td,
+.doc-canvas table.doc-response-table td{
+    padding:12px 14px!important;
+    vertical-align:top;
+    overflow-wrap:anywhere;
+    word-break:break-word;
+    border-radius:8px;
+    -webkit-print-color-adjust:exact;
+    print-color-adjust:exact;
+}
+.doc-canvas table.doc-quick-table td.quick-math{border:none!important;border-left:6px solid #E67E22!important;background:#FFF3E0!important;}
+.doc-canvas table.doc-quick-table td.quick-language{border:none!important;border-left:6px solid #27AE60!important;background:#E8F5E9!important;}
+.doc-canvas table.doc-quick-table td.quick-help{border:none!important;border-left:6px solid #FBC02D!important;background:#FFFDE7!important;}
+.doc-canvas table.doc-quick-table td.quick-remember{border:none!important;border-left:6px solid #D31718!important;background:#FFEBEE!important;}
+.doc-canvas table.doc-quick-table td.quick-review{border:none!important;border-left:6px solid #036FB0!important;background:#E3F2FD!important;}
+.doc-canvas table.doc-quick-table td.quick-answer{border:1px solid #90A4AE!important;background:#FAFAFA!important;min-height:90px;}
+.doc-canvas table.doc-response-table td{border:1px solid #777!important;background:white!important;min-height:110px;}
+.doc-canvas table.doc-response-table.student-data td{min-height:42px;}
+.student-data-line{
+    display:flex;
+    gap:16px;
+    flex-wrap:wrap;
+    align-items:center;
+}
+.student-data-line span{
+    white-space:nowrap;
+}
+
+/* Image drag */
+#img-resize-handle{
+    display:none; position:absolute; width:18px; height:18px; border-radius:50%; background:#2196F3;
+    border:3px solid white; box-shadow:0 3px 10px rgba(0,0,0,.35); z-index:2000; cursor:nwse-resize; touch-action:none;
+}
+#img-resize-label{
+    display:none; position:absolute; background:#263238; color:white; font-size:.78rem;
+    padding:4px 8px; border-radius:999px; z-index:1999; pointer-events:none;
+}
+#img-delete-btn{
+    display:none; position:absolute; z-index:2001; background:#D32F2F; color:white; border:2px solid white;
+    border-radius:999px; width:28px; height:28px; cursor:pointer;
+}
+#img-context-menu{
+    display:none;
+    position:absolute;
+    z-index:2002;
+    background:white;
+    border:1px solid #B0BEC5;
+    border-radius:10px;
+    padding:7px;
+    box-shadow:0 5px 18px rgba(0,0,0,.22);
+    width:280px;
+    font-family:'Nunito',Arial,sans-serif;
+}
+.img-menu-title{
+    font-size:.76rem;
+    font-weight:800;
+    color:#607D8B;
+    margin:2px 4px 6px;
+}
+.img-menu-grid{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:5px;
+}
+.img-menu-btn{
+    border:1px solid #CFD8DC;
+    background:#F5F7FA;
+    color:#37474F;
+    border-radius:7px;
+    padding:6px 7px;
+    cursor:pointer;
+    font-weight:800;
+    font-size:.82rem;
+    text-align:left;
+}
+.img-menu-btn:hover{background:#E3F2FD;border-color:#29B6F6;color:#01579B}
+.img-menu-btn.danger:hover{background:#FFEBEE;border-color:#EF9A9A;color:#B71C1C}
+.selected-image-editor{outline:3px solid #2196F3;box-shadow:0 0 10px rgba(33,150,243,.5)}
+
+@media (max-width:900px){
+    body{padding:10px}
+    .config-grid{grid-template-columns:1fr}
+    .compact-actions{justify-content:flex-start}
+    .margin-row{align-items:stretch}
+    .margin-row .field{max-width:none;flex:1 1 100%}
+    .margin-panel{width:100%}
+    .canvas-shell{width:100%}
+}
+@media print{
+    *{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}
+    body{background:white;padding:0;margin:0}
+    .topbar,.main-toolbar,.modal-overlay,#table-floating-menu,#emoji-popup,#color-popup,#quick-block-popup,#response-popup,#img-resize-handle,#img-resize-label,#img-delete-btn,#img-context-menu,#block-bar,.page-marker-layer{display:none!important}
+    .block-active{outline:none!important}
+    .doc-lines:hover{outline:none!important}
+    #app-container{max-width:none;margin:0}
+    .canvas-stage{display:block}
+    .canvas-shell{width:auto;overflow:visible}
+    .doc-canvas{
+        width:auto;
+        max-width:none;
+        min-height:auto;
+        box-shadow:none;
+        border:none;
+        margin:0;
+        padding:0;
+        overflow:visible;
+    }
+    .manual-page-break{border:0!important;margin:0!important;height:0!important;break-after:page;page-break-after:always}
+    .manual-page-break:after{display:none!important}
+}
+</style>
+</head>
+<body>
+
+<div id="app-container">
+    <section class="topbar">
+        <div class="config-grid compact-config">
+            <div class="field">
+                <label>Título</label>
+                <input type="text" id="doc-title" value="Documento sin título" oninput="updateFilenameFromTitle(false); triggerSave()">
+            </div>
+            <div class="field">
+                <label>Archivo JSON</label>
+                <input type="text" id="doc-filename" value="documento.json" data-edited="0" oninput="triggerSave()">
+            </div>
+            <div class="compact-actions" aria-label="Acciones del documento">
+                <button class="icon-action" onclick="newDocument()" title="Nuevo documento" aria-label="Nuevo documento">📄</button>
+                <button class="icon-action" onclick="saveDocument()" title="Guardar en borradores/editor/ (Ctrl+S)" aria-label="Guardar">💾</button>
+                <button class="icon-action" onclick="openDocuments()" title="Abrir un borrador" aria-label="Abrir">📂</button>
+            </div>
+        </div>
+        <div class="margin-row">
+            <div class="field">
+                <label>Márgenes A4</label>
+                <select id="margin-preset" onchange="applyMarginPreset(this.value); triggerSave()">
+                    <option value="all1" selected>Todos 1 cm</option>
+                    <option value="all2">Todos 2 cm</option>
+                    <option value="v1h2">Arr./ab. 1 cm · lados 2 cm</option>
+                    <option value="v2h1">Arr./ab. 2 cm · lados 1 cm</option>
+                    <option value="custom">Personalizado</option>
+                </select>
+            </div>
+            <div class="margin-panel" id="custom-margin-panel" aria-label="Márgenes personalizados">
+                <label class="margin-mini" title="Superior">↑ <input type="number" id="margin-top" value="1" min="0.5" max="3" step="0.1" oninput="applyCustomMargins(); triggerSave()"></label>
+                <label class="margin-mini" title="Derecho">→ <input type="number" id="margin-right" value="1" min="0.5" max="3" step="0.1" oninput="applyCustomMargins(); triggerSave()"></label>
+                <label class="margin-mini" title="Inferior">↓ <input type="number" id="margin-bottom" value="1" min="0.5" max="3" step="0.1" oninput="applyCustomMargins(); triggerSave()"></label>
+                <label class="margin-mini" title="Izquierdo">← <input type="number" id="margin-left" value="1" min="0.5" max="3" step="0.1" oninput="applyCustomMargins(); triggerSave()"></label>
+            </div>
+        </div>
+        <div class="inst-bar" id="instStatus"></div>
+        <div class="status">
+            <span id="save-msg" class="badge ok">🟢 Local</span>
+            <span id="cloud-msg" class="badge">📁 Sin guardar</span>
+            <span id="page-count-msg" class="badge">📄 1 pág. A4 aprox.</span>
+        </div>
+    </section>
+
+    <div class="main-toolbar">
+        <button class="tool-btn icon" onclick="execCmd('undo')" title="Deshacer">↩️</button>
+        <button class="tool-btn icon" onclick="execCmd('redo')" title="Rehacer">↪️</button>
+        <button class="tool-btn icon" onclick="copySelection()" title="Copiar selección"><span class="material-icons">content_copy</span></button>
+        <button class="tool-btn" onclick="cleanDocument()" title="Limpiar formato">🧹 Limpiar</button>
+        <button class="tool-btn quick-trigger" onmousedown="event.preventDefault(); event.stopPropagation(); saveSelection(); openQuickBlockMenu(this)" onclick="event.stopPropagation()">📌 Bloques</button>
+        <button class="tool-btn response-trigger" onmousedown="event.preventDefault(); event.stopPropagation(); saveSelection(); openResponseMenu(this)" onclick="event.stopPropagation()">📝 Renglones</button>
+        <div class="separator"></div>
+        <button class="tool-btn icon" onclick="execCmd('bold')" title="Negrita"><span class="material-icons">format_bold</span></button>
+        <button class="tool-btn icon" onclick="execCmd('italic')" title="Cursiva"><span class="material-icons">format_italic</span></button>
+        <button class="tool-btn icon" onclick="execCmd('underline')" title="Subrayado"><span class="material-icons">format_underlined</span></button>
+        <button class="tool-btn icon btn-color" onmousedown="event.preventDefault(); saveSelection(); openColorMenu(this)" title="Color de texto"><span class="material-icons" style="color:var(--accent);text-decoration:underline">format_color_text</span></button>
+        <select class="tool-select" onmousedown="saveSelection()" onchange="applyFontSize(this)">
+            <option value="">Tamaño...</option>
+            <option value="12px">12 px</option>
+            <option value="14px">14 px</option>
+            <option value="16px">16 px</option>
+            <option value="18px">18 px</option>
+            <option value="20px">20 px</option>
+            <option value="24px">24 px</option>
+            <option value="28px">28 px</option>
+            <option value="32px">32 px</option>
+        </select>
+        <select class="tool-select" onmousedown="saveSelection()" onchange="changeLineHeight(this)">
+            <option value="1.0">Interlineado 1.0</option>
+            <option value="1.5" selected>Interlineado 1.5</option>
+            <option value="2.0">Interlineado 2.0</option>
+        </select>
+        <div class="separator"></div>
+        <button class="tool-btn icon" onclick="execCmd('justifyLeft')"><span class="material-icons">format_align_left</span></button>
+        <button class="tool-btn icon" onclick="execCmd('justifyCenter')"><span class="material-icons">format_align_center</span></button>
+        <button class="tool-btn icon" onclick="execCmd('justifyRight')"><span class="material-icons">format_align_right</span></button>
+        <button class="tool-btn icon" onclick="execCmd('insertUnorderedList')" title="Lista"><span class="material-icons">format_list_bulleted</span></button>
+        <div class="separator"></div>
+        <button class="tool-btn btn-emoji" onmousedown="event.preventDefault(); saveSelection(); openEmojiMenu(this)">😀</button>
+        <button class="tool-btn" onmousedown="event.preventDefault(); saveSelection(); openImageGallery()">🖼️ Galería</button>
+        <button class="tool-btn" onmousedown="event.preventDefault(); saveSelection(); triggerLocalImage()" title="Copia la imagen a images/ y la inserta">📷 PC</button>
+        <div class="separator"></div>
+        <button class="tool-btn" onclick="openTableModal('insert')"><span class="material-icons">grid_on</span> Tabla</button>
+        <button class="tool-btn" onclick="openTableActionsMenu()" title="Colores, columnas, filas, unir celdas">⚙️ Tabla</button>
+        <button class="tool-btn" onclick="openTableModal('format')" title="Bordes, ancho y encabezados de toda la tabla">🎨 Estilo</button>
+        <div class="separator"></div>
+        <button class="tool-btn" onclick="insertPageBreak()">Salto página</button>
+        <button class="tool-btn" onclick="exportCleanHTML()" title="Guarda el HTML en publicar/">HTML limpio</button>
+        <button class="tool-btn" onclick="showUsedImages()">Imágenes usadas</button>
+        <button class="tool-btn" onclick="window.print()">Imprimir/PDF</button>
+    </div>
+
+    <main class="canvas-stage">
+        <div class="canvas-shell" id="canvas-shell">
+            <div class="page-marker-layer" id="page-marker-layer"></div>
+            <article id="doc-canvas" class="doc-canvas" contenteditable="true"
+                onfocus="activeEditor=this"
+                oninput="triggerSave(); updatePageMarkersSoon()"
+                onmouseup="handleEditorClick(event)"
+                onkeyup="handleEditorClick(event); updatePageMarkersSoon()"
+                onkeydown="handleTabKey(event)"></article>
+        </div>
+    </main>
+</div>
+
+<!-- Modales -->
+<div id="tableModal" class="modal-overlay">
+    <div class="modal">
+        <div class="modal-header">
+            <h2 id="tableModalTitle">Crear tabla</h2>
+            <button class="modal-btn light" onclick="closeTableModal()">Cerrar</button>
+        </div>
+        <div class="modal-body">
+            <div class="table-grid">
+                <div id="rowsBox"><label>Filas</label><input type="number" id="inputRows" value="3" min="1" max="30"></div>
+                <div id="colsBox"><label>Columnas</label><input type="number" id="inputCols" value="3" min="1" max="12"></div>
+                <div><label>Ancho de tabla</label><select id="tableWidth"><option value="100%">100%</option><option value="75%">75%</option><option value="50%">50%</option></select></div>
+                <div><label>Alineación</label><select id="tableAlign"><option value="left">Izquierda</option><option value="center">Centro</option><option value="right">Derecha</option></select></div>
+                <div><label>Borde</label><select id="tableBorderWidth"><option value="1">Fino</option><option value="2">Medio</option><option value="3">Grueso</option><option value="0">Sin bordes</option></select></div>
+                <div><label>Color de borde</label><input type="color" id="tableBorderColor" value="#000000"></div>
+                <div><label>Fondo encabezado</label><input type="color" id="tableHeaderBg" value="#eeeeee"></div>
+                <div id="colWidthsBox" style="grid-column:1/-1"><label>Ancho de columnas en % (opcional, ej: 30,40,30 — vacío = iguales)</label><input type="text" id="tableColWidths" placeholder="30,70"></div>
+                <div><label>Espaciado interno</label><select id="tablePadding"><option value="5">Chico</option><option value="8" selected>Medio</option><option value="12">Grande</option></select></div>
+            </div>
+            <div class="check-grid">
+                <label><input type="checkbox" id="tableHeaderRow"> Primera fila como encabezado</label>
+                <label><input type="checkbox" id="tableHeaderCol"> Primera columna como encabezado</label>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="modal-btn light" onclick="closeTableModal()">Cancelar</button>
+            <button class="modal-btn primary" id="tableApplyBtn" onclick="applyTableModal()">Insertar tabla</button>
+        </div>
+    </div>
+</div>
+
+<div id="table-floating-menu" onmousedown="if(!event.target.closest('input,select'))event.preventDefault()">
+    <div class="tf-head"><span>Tabla</span><button class="tf-btn" onclick="closeTableMenu()" title="Cerrar">✕</button></div>
+    <div class="tf-label">Aplicar color y alineación a</div>
+    <div class="tf-section" id="tf-scope">
+        <button class="tf-btn on" data-v="cell" onclick="setTfScope('cell')" title="La celda donde estás, o las que hayas seleccionado arrastrando">Celdas</button>
+        <button class="tf-btn" data-v="row" onclick="setTfScope('row')">Fila</button>
+        <button class="tf-btn" data-v="col" onclick="setTfScope('col')">Columna</button>
+        <button class="tf-btn" data-v="header" onclick="setTfScope('header')">1ª fila</button>
+        <button class="tf-btn" data-v="table" onclick="setTfScope('table')">Toda</button>
+    </div>
+    <div class="tf-label">Color de fondo</div>
+    <div class="tf-section">
+        <div class="tf-color-circle" style="background:white" onclick="tableColor('#ffffff')" title="Blanco"></div>
+        <div class="tf-color-circle" style="background:#eeeeee" onclick="tableColor('#eeeeee')" title="Gris claro"></div>
+        <div class="tf-color-circle" style="background:#fff9c4" onclick="tableColor('#fff9c4')" title="Amarillo"></div>
+        <div class="tf-color-circle" style="background:#ffe0b2" onclick="tableColor('#ffe0b2')" title="Naranja"></div>
+        <div class="tf-color-circle" style="background:#ffcdd2" onclick="tableColor('#ffcdd2')" title="Rosa"></div>
+        <div class="tf-color-circle" style="background:#c8e6c9" onclick="tableColor('#c8e6c9')" title="Verde"></div>
+        <div class="tf-color-circle" style="background:#bbdefb" onclick="tableColor('#bbdefb')" title="Celeste"></div>
+        <div class="tf-color-circle" style="background:#e1bee7" onclick="tableColor('#e1bee7')" title="Lila"></div>
+        <div class="tf-color-circle" style="background:#424242" onclick="tableColor('#424242')" title="Oscuro"></div>
+        <div class="tf-color-circle" style="background:#036FB0" onclick="tableColor('#036FB0')" title="Azul"></div>
+        <input type="color" id="tf-bg" value="#ffff99" title="Otro color" onchange="tableColor(this.value)" style="width:28px;height:24px;padding:0;border:0">
+        <button class="tf-btn" onclick="tableColor('')">Sin color</button>
+    </div>
+    <div class="tf-label">Color de texto</div>
+    <div class="tf-section">
+        <div class="tf-color-circle" style="background:#000" onclick="tableTextColor('#000000')" title="Negro"></div>
+        <div class="tf-color-circle" style="background:#fff" onclick="tableTextColor('#ffffff')" title="Blanco"></div>
+        <div class="tf-color-circle" style="background:#D32F2F" onclick="tableTextColor('#D32F2F')" title="Rojo"></div>
+        <div class="tf-color-circle" style="background:#1976D2" onclick="tableTextColor('#1976D2')" title="Azul"></div>
+        <div class="tf-color-circle" style="background:#388E3C" onclick="tableTextColor('#388E3C')" title="Verde"></div>
+        <input type="color" id="tf-fg" value="#000000" title="Otro color" onchange="tableTextColor(this.value)" style="width:28px;height:24px;padding:0;border:0">
+        <button class="tf-btn" onclick="tableAlignCells('left')" title="Texto a la izquierda">⬅</button>
+        <button class="tf-btn" onclick="tableAlignCells('center')" title="Centrado">↔</button>
+        <button class="tf-btn" onclick="tableAlignCells('right')" title="A la derecha">➡</button>
+        <button class="tf-btn" onclick="tableVAlignCells('top')" title="Arriba">⤒</button>
+        <button class="tf-btn" onclick="tableVAlignCells('middle')" title="Al medio">⬍</button>
+        <button class="tf-btn" onclick="tableVAlignCells('bottom')" title="Abajo">⤓</button>
+    </div>
+    <div class="tf-label">Ancho de esta columna (también podés arrastrar el borde)</div>
+    <div class="tf-section">
+        <input type="number" id="tf-colw" min="4" max="95" step="1" style="width:64px;padding:4px;border:1px solid #CFD8DC;border-radius:6px" onchange="setColWidthPct(this.value)"> <span style="align-self:center">%</span>
+        <button class="tf-btn" onclick="equalizeCols()">Igualar todas</button>
+    </div>
+    <div class="tf-label">Filas / Columnas</div>
+    <div class="tf-section">
+        <button class="tf-btn" onclick="tableAction('addRowAbove')">➕ Fila ↑</button>
+        <button class="tf-btn" onclick="tableAction('addRow')">➕ Fila ↓</button>
+        <button class="tf-btn" onclick="tableAction('delRow')">❌ Fila</button>
+        <button class="tf-btn" onclick="tableAction('addColLeft')">➕ Col ←</button>
+        <button class="tf-btn" onclick="tableAction('addCol')">➕ Col →</button>
+        <button class="tf-btn" onclick="tableAction('delCol')">❌ Col</button>
+    </div>
+    <div class="tf-label">Celdas y bordes</div>
+    <div class="tf-section">
+        <button class="tf-btn" onclick="tableAction('mergeRight')" title="Une la celda con la de la derecha">Unir →</button>
+        <button class="tf-btn" onclick="tableAction('mergeRow')" title="Une toda la fila (título)">Unir fila</button>
+        <button class="tf-btn" onclick="tableAction('split')">Separar</button>
+        <button class="tf-btn" onclick="tableBorders(0)">Sin bordes</button>
+        <button class="tf-btn" onclick="tableBorders(1)">Finos</button>
+        <button class="tf-btn" onclick="tableBorders(3)">Gruesos</button>
+        <input type="color" id="tf-border" value="#000000" title="Color de borde" onchange="tableBorderColorAll(this.value)" style="width:28px;height:24px;padding:0;border:0">
+    </div>
+    <div class="tf-section">
+        <button class="tf-btn" onclick="openTableModal('format')">🎨 Formato completo…</button>
+        <button class="tf-btn" onclick="tableAction('deleteTable')" style="color:#B71C1C">🗑️ Borrar tabla</button>
+    </div>
+</div>
+
+<div id="emoji-popup"></div>
+
+<div id="color-popup">
+    <div class="color-opt" style="background:white" onclick="execColor('white')" title="Blanco"></div>
+    <div class="color-opt" style="background:black" onclick="execColor('black')" title="Negro"></div>
+    <div class="color-opt" style="background:#D32F2F" onclick="execColor('#D32F2F')"></div>
+    <div class="color-opt" style="background:#1976D2" onclick="execColor('#1976D2')"></div>
+    <div class="color-opt" style="background:#388E3C" onclick="execColor('#388E3C')"></div>
+    <div class="color-opt" style="background:#7B1FA2" onclick="execColor('#7B1FA2')"></div>
+    <div class="color-opt" style="background:#F57C00" onclick="execColor('#F57C00')"></div>
+</div>
+
+<div id="quick-block-popup">
+    <div class="quick-menu-title">Insertar bloque rápido</div>
+    <div class="quick-menu-grid">
+        <button class="quick-menu-btn" onmousedown="event.preventDefault(); event.stopPropagation(); insertQuickBlock('consignaMatematica')">📌 Consigna Matemática</button>
+        <button class="quick-menu-btn" onmousedown="event.preventDefault(); event.stopPropagation(); insertQuickBlock('consignaLengua')">📌 Consigna Lengua</button>
+        <button class="quick-menu-btn" onmousedown="event.preventDefault(); event.stopPropagation(); insertQuickBlock('respuesta')">✏️ Para responder</button>
+        <button class="quick-menu-btn" onmousedown="event.preventDefault(); event.stopPropagation(); insertQuickBlock('ayuda')">💡 Ayuda</button>
+        <button class="quick-menu-btn" onmousedown="event.preventDefault(); event.stopPropagation(); insertQuickBlock('recorda')">⚠️ Recordá</button>
+        <button class="quick-menu-btn" onmousedown="event.preventDefault(); event.stopPropagation(); insertQuickBlock('revision')">✅ Revisión</button>
+    </div>
+</div>
+
+<div id="response-popup">
+    <div class="quick-menu-title">Renglones y espacios de respuesta</div>
+    <div class="popup-category-title">Tipo</div>
+    <div class="resp-opt" id="resp-kind">
+        <button data-v="solid" onmousedown="event.preventDefault(); event.stopPropagation(); setRespKind('solid')">Líneas</button>
+        <button data-v="dotted" onmousedown="event.preventDefault(); event.stopPropagation(); setRespKind('dotted')">Punteadas</button>
+        <button data-v="grid" onmousedown="event.preventDefault(); event.stopPropagation(); setRespKind('grid')">Cuadriculado</button>
+    </div>
+    <div class="popup-category-title">Separación</div>
+    <div class="resp-opt" id="resp-gap">
+        <button data-v="24" onmousedown="event.preventDefault(); event.stopPropagation(); setRespGap(24)">Chica</button>
+        <button data-v="30" onmousedown="event.preventDefault(); event.stopPropagation(); setRespGap(30)">Normal</button>
+        <button data-v="38" onmousedown="event.preventDefault(); event.stopPropagation(); setRespGap(38)">Grande</button>
+    </div>
+    <div class="popup-category-title">Insertar (cantidad de renglones)</div>
+    <div class="resp-opt">
+        <button onmousedown="event.preventDefault(); event.stopPropagation(); insertLines(1)">1</button>
+        <button onmousedown="event.preventDefault(); event.stopPropagation(); insertLines(2)">2</button>
+        <button onmousedown="event.preventDefault(); event.stopPropagation(); insertLines(3)">3</button>
+        <button onmousedown="event.preventDefault(); event.stopPropagation(); insertLines(5)">5</button>
+        <button onmousedown="event.preventDefault(); event.stopPropagation(); insertLines(8)">8</button>
+        <button onmousedown="event.preventDefault(); event.stopPropagation(); insertLines(10)">10</button>
+    </div>
+    <div class="quick-menu-grid">
+        <button class="quick-menu-btn" onmousedown="event.preventDefault(); event.stopPropagation(); insertLines(0)">Otra cantidad…</button>
+        <button class="quick-menu-btn" onmousedown="event.preventDefault(); event.stopPropagation(); insertResponseElement('studentData')">Datos del alumno</button>
+        <button class="quick-menu-btn" onmousedown="event.preventDefault(); event.stopPropagation(); insertResponseElement('box')">Cuadro de respuesta</button>
+    </div>
+    <div class="resp-hint">Después de insertar, seguís escribiendo debajo. Tocá un bloque para mover, duplicar o borrar.</div>
+</div>
+
+<div id="block-bar" onmousedown="event.preventDefault()">
+    <select id="bb-type" onchange="bbType(this.value)" title="Cambiar tipo de bloque">
+        <option value="quick-math">Consigna Mat.</option>
+        <option value="quick-language">Consigna Leng.</option>
+        <option value="quick-answer">Para responder</option>
+        <option value="quick-help">Ayuda</option>
+        <option value="quick-remember">Recordá</option>
+        <option value="quick-review">Revisión</option>
+    </select>
+    <span id="bb-lines" style="display:none">
+        <button onclick="bbLines(-1)" title="Un renglón menos">−</button><button onclick="bbLines(1)" title="Un renglón más">＋</button><button onclick="bbGap()" title="Cambiar separación">↕</button>
+    </span>
+    <button id="bb-tbl" onclick="openTableActionsMenu()" title="Colores, columnas, filas, unir celdas" style="display:none">🎨 Tabla</button>
+    <span class="bb-sep"></span>
+    <button onclick="bbMove(-1)" title="Subir bloque">▲</button>
+    <button onclick="bbMove(1)" title="Bajar bloque">▼</button>
+    <span class="bb-sep"></span>
+    <button onclick="bbPara('before')" title="Escribir arriba (agrega un párrafo antes)">¶↑</button>
+    <button onclick="bbPara('after')" title="Escribir abajo (agrega un párrafo después)">¶↓</button>
+    <span class="bb-sep"></span>
+    <button onclick="bbDup()" title="Duplicar">⧉</button>
+    <button class="danger" onclick="bbDel()" title="Borrar bloque">🗑</button>
+</div>
+
+<div id="img-resize-label">Arrastrá para cambiar tamaño</div>
+<div id="img-resize-handle"></div>
+<button id="img-delete-btn" onclick="deleteSelectedImg()">×</button>
+<div id="img-context-menu">
+    <div class="img-menu-title">Imagen seleccionada</div>
+    <div class="img-menu-grid">
+        <button class="img-menu-btn" onclick="setImageLayout('left')">⬅ Izquierda</button>
+        <button class="img-menu-btn" onclick="setImageLayout('center')">↔ Centro</button>
+        <button class="img-menu-btn" onclick="setImageLayout('right')">➡ Derecha</button>
+        <button class="img-menu-btn" onclick="setImageLayout('inline')">📄 En línea</button>
+        <button class="img-menu-btn" onclick="setImageLayout('wrapRight')">🧲 Texto rodea a la derecha</button>
+        <button class="img-menu-btn" onclick="setImageLayout('wrapLeft')">🧲 Texto rodea a la izquierda</button>
+        <button class="img-menu-btn" onclick="setImageLayout('normal')">🚫 Sin rodeo</button>
+        <button class="img-menu-btn danger" onclick="deleteSelectedImg()">🗑️ Borrar imagen</button>
+    </div>
+</div>
+<input type="file" id="localImageInput" accept="image/*" style="display:none" onchange="handleLocalImageUpload(this)">
+
+<script>
+const STORAGE_KEY = 'editor_doc_privado_v2_state';
+
+let activeEditor = null;
+let savedRange = null;
+let selectedImg = null;
+let imageResizeState = null;
+let activeTableCell = null;
+let tableModalMode = 'insert';
+let saveTimeout = null;
+let pageMarkerTimeout = null;
+let margins = {preset:'all1', top:1, right:1, bottom:1, left:1};
+
+const themes = {
+    recursos:{bg:'#E3F2FD', header:'#036FB0', title:'#01579B', accent:'#FF7043', toolbar:'#F5FAFF', border:'#BBDEFB'},
+    lengua:{bg:'#E8F5E9', header:'#27AE60', title:'#1B5E20', accent:'#2E7D32', toolbar:'#F1F8E9', border:'#C8E6C9'},
+    matematica:{bg:'#FFF3E0', header:'#E67E22', title:'#E65100', accent:'#EF6C00', toolbar:'#FFF8E1', border:'#FFE0B2'},
+    diseno:{bg:'#FFEBEE', header:'#D31718', title:'#B71C1C', accent:'#C2185B', toolbar:'#FFF5F6', border:'#FFCDD2'}
+};
+
+document.addEventListener('DOMContentLoaded', () => {
+    activeEditor = document.getElementById('doc-canvas');
+    loadEmojis();
+    loadLocalState();
+
+    document.addEventListener('selectionchange', () => {
+        const editor = getEditorFromSelection();
+        if (editor) activeEditor = editor;
+    });
+
+    document.addEventListener('click', e => {
+        if (!e.target.closest('#table-floating-menu') && !e.target.closest('td') && !e.target.closest('th')) document.getElementById('table-floating-menu').style.display = 'none';
+        if (!e.target.closest('#emoji-popup') && !e.target.closest('.btn-emoji')) document.getElementById('emoji-popup').style.display = 'none';
+        if (!e.target.closest('#color-popup') && !e.target.closest('.btn-color')) document.getElementById('color-popup').style.display = 'none';
+        if (!e.target.closest('#quick-block-popup') && !e.target.closest('.quick-trigger')) document.getElementById('quick-block-popup').style.display = 'none';
+        if (!e.target.closest('#response-popup') && !e.target.closest('.response-trigger')) document.getElementById('response-popup').style.display = 'none';
+        if (!e.target.closest('#img-resize-handle') && !e.target.closest('#img-delete-btn') && !e.target.closest('#img-context-menu') && e.target.tagName !== 'IMG') clearSelectedImage();
+    });
+
+    ['quick-block-popup','response-popup'].forEach(id => {
+        const popup = document.getElementById(id);
+        if (popup) popup.addEventListener('click', ev => ev.stopPropagation());
+    });
+    const imgHandle = document.getElementById('img-resize-handle');
+    imgHandle.addEventListener('pointerdown', startImageResize);
+    document.addEventListener('pointermove', handleImageResizeMove);
+    document.addEventListener('pointerup', stopImageResize);
+    window.addEventListener('resize', updatePageMarkersSoon);
+    window.addEventListener('resize', updateImageResizeHandle);
+    window.addEventListener('scroll', updateImageResizeHandle, true);
+});
+
+function applyTheme(key){
+    const t = themes[key] || themes.recursos;
+    const r = document.documentElement.style;
+    r.setProperty('--bg', t.bg);
+    r.setProperty('--header', t.header);
+    r.setProperty('--header-dark', t.title);
+    r.setProperty('--accent', t.accent);
+    r.setProperty('--toolbar', t.toolbar);
+    r.setProperty('--border', t.border);
+}
+function updateFilenameFromTitle(force){
+    const input = document.getElementById('doc-filename');
+    if (!force && input.dataset.edited === '1') return;
+    const base = safeFilename(document.getElementById('doc-title').value || 'documento').replace(/\.json$/i,'');
+    input.value = base + '.json';
+}
+(function initBlockUI(){
+    syncRespButtons();
+    const ed = canvasEl();
+    ed.addEventListener('click', e => {
+        const b = blockFromNode(e.target);
+        if (b) setBlockBar(b); else setBlockBar(null);
+    });
+    ed.addEventListener('input', () => { ensureEdgeParagraphs(); positionBlockBar(); });
+    document.addEventListener('selectionchange', () => {
+        const sel = window.getSelection();
+        if (!sel.rangeCount || !ed.contains(sel.anchorNode)) return;
+        const b = blockFromNode(sel.anchorNode);
+        if (b !== currentBlock) { if (b) setBlockBar(b); else if (currentBlock && !(document.activeElement && document.activeElement.closest && document.activeElement.closest('#block-bar'))) setBlockBar(null); }
+    });
+    window.addEventListener('scroll', positionBlockBar, true);
+    window.addEventListener('resize', positionBlockBar);
+})();
+(async function initInstalacion(){
+    document.body.style.opacity = 1;
+    Instalacion.configure({ kind: 'editor' });
+    await Instalacion.init();
+    Instalacion.mountStatus('instStatus');
+    Instalacion.onChange(rehydrateImages);
+    document.addEventListener('keydown', e => {
+        if ((e.ctrlKey || e.metaKey) && String(e.key).toLowerCase() === 's'){ e.preventDefault(); saveDocument(); }
+    });
+})();
+document.addEventListener('input', e => {
+    if (e.target && e.target.id === 'doc-filename') e.target.dataset.edited = '1';
+});
+function safeFilename(name){
+    let n = String(name||'documento').trim().replace(/^.*[\\/]/,'').replace(/[^a-zA-Z0-9._-]+/g,'-').replace(/^[-_.]+|[-_.]+$/g,'');
+    if (!n) n = 'documento';
+    if (!n.toLowerCase().endsWith('.json')) n += '.json';
+    return n;
+}
+function encodeImagePath(filename){return String(filename||'').split('/').map(encodeURIComponent).join('/')}
+function resolveImageSrc(value){
+    const v = String(value||'').trim();
+    if (!v) return '';
+    if (/^(data:image|blob:|https?:\/\/)/i.test(v)) return v;
+    return Instalacion.imageSrc(imageNameOf(v));
+}
+function imageNameOf(v){return String(v||'').split(/[?#]/)[0].replace(/^.*\//,'').trim()}
+/* Imágenes: en el documento se guarda el NOMBRE (data-img); la ruta se arma al guardar/exportar */
+function contentWithImagePaths(prefix, forExport){
+    const clone = document.getElementById('doc-canvas').cloneNode(true);
+    clone.querySelectorAll('.block-active').forEach(i=>i.classList.remove('block-active'));
+    if (forExport){
+        clone.querySelectorAll('[contenteditable]').forEach(i=>i.removeAttribute('contenteditable'));
+        while (clone.lastElementChild && /^(P|DIV)$/.test(clone.lastElementChild.tagName) && !clone.lastElementChild.matches('.doc-lines,.manual-page-break') && !clone.lastElementChild.querySelector('img,table') && !clone.lastElementChild.textContent.trim()) clone.lastElementChild.remove();
+    }
+    clone.querySelectorAll('.selected-image-editor').forEach(i=>i.classList.remove('selected-image-editor'));
+    clone.querySelectorAll('img[data-img]').forEach(img=>{
+        img.setAttribute('src', prefix + encodeImagePath(img.getAttribute('data-img')));
+    });
+    return clone.innerHTML;
+}
+function hydrateContent(html){
+    const d = document.createElement('div'); d.innerHTML = html || '';
+    d.querySelectorAll('img').forEach(img=>{
+        let name = img.getAttribute('data-img');
+        if (!name){
+            const m = (img.getAttribute('src')||'').match(/^(?:\.\.\/|\/)?images\/([^?#]+)/);
+            if (m){ name = decodeURIComponent(m[1]); img.setAttribute('data-img', name); }
+        }
+        if (name) img.setAttribute('src', Instalacion.imageSrc(name));
+    });
+    return d.innerHTML;
+}
+function rehydrateImages(){
+    document.querySelectorAll('#doc-canvas img[data-img]').forEach(img=>{
+        const want = Instalacion.imageSrc(img.getAttribute('data-img'));
+        if (img.getAttribute('src') !== want) img.setAttribute('src', want);
+    });
+}
+function showUsedImages(){
+    Instalacion.openImageReport(Instalacion.usedImagesFromHTML(document.getElementById('doc-canvas').innerHTML));
+    const inline = document.querySelectorAll('#doc-canvas img[src^="data:"]').length;
+    if (inline) Instalacion.toast('Hay '+inline+' imagen(es) incrustadas (sin carpeta). Conectá la carpeta y volvé a insertarlas.');
+}
+
+/* Márgenes y marcas de página */
+function marginPresetToValues(preset){
+    if (preset === 'all2') return {top:2,right:2,bottom:2,left:2};
+    if (preset === 'v1h2') return {top:1,right:2,bottom:1,left:2};
+    if (preset === 'v2h1') return {top:2,right:1,bottom:2,left:1};
+    return {top:1,right:1,bottom:1,left:1};
+}
+function applyMarginPreset(preset){
+    document.getElementById('custom-margin-panel').style.display = preset === 'custom' ? 'flex' : 'none';
+    if (preset !== 'custom') {
+        margins = {preset, ...marginPresetToValues(preset)};
+        setMarginInputs();
+    } else {
+        margins.preset = 'custom';
+        applyCustomMargins(false);
+    }
+    updateMargins();
+}
+function setMarginInputs(){
+    document.getElementById('margin-top').value = margins.top;
+    document.getElementById('margin-right').value = margins.right;
+    document.getElementById('margin-bottom').value = margins.bottom;
+    document.getElementById('margin-left').value = margins.left;
+}
+function applyCustomMargins(update=true){
+    margins = {
+        preset:'custom',
+        top: clampFloat(document.getElementById('margin-top').value, .5, 3, 1),
+        right: clampFloat(document.getElementById('margin-right').value, .5, 3, 1),
+        bottom: clampFloat(document.getElementById('margin-bottom').value, .5, 3, 1),
+        left: clampFloat(document.getElementById('margin-left').value, .5, 3, 1)
+    };
+    if (update) updateMargins();
+}
+function updateMargins(){
+    const r = document.documentElement.style;
+    r.setProperty('--m-top', margins.top + 'cm');
+    r.setProperty('--m-right', margins.right + 'cm');
+    r.setProperty('--m-bottom', margins.bottom + 'cm');
+    r.setProperty('--m-left', margins.left + 'cm');
+    document.getElementById('dynamic-print-style').textContent = `@page { size: A4; margin: ${margins.top}cm ${margins.right}cm ${margins.bottom}cm ${margins.left}cm; }`;
+    updatePageMarkersSoon();
+}
+function clampFloat(v,min,max,fb){
+    const n = parseFloat(v);
+    if (Number.isNaN(n)) return fb;
+    return Math.max(min, Math.min(max, n));
+}
+function pxForCssLength(length){
+    const el = document.createElement('div');
+    el.style.position = 'absolute';
+    el.style.visibility = 'hidden';
+    el.style.height = length;
+    document.body.appendChild(el);
+    const px = el.getBoundingClientRect().height;
+    el.remove();
+    return px || 1122;
+}
+function updatePageMarkersSoon(){
+    clearTimeout(pageMarkerTimeout);
+    pageMarkerTimeout = setTimeout(updatePageMarkers, 80);
+}
+function updatePageMarkers(){
+    const canvas = document.getElementById('doc-canvas');
+    const layer = document.getElementById('page-marker-layer');
+    const pageHeight = pxForCssLength('297mm');
+    const topMargin = pxForCssLength((margins.top || 1) + 'cm');
+    const bottomMargin = pxForCssLength((margins.bottom || 1) + 'cm');
+    const printableHeight = Math.max(120, pageHeight - topMargin - bottomMargin);
+
+    // scrollHeight incluye el padding superior/inferior del paño.
+    // Para que el aviso coincida mejor con el PDF, medimos el flujo real del contenido
+    // y marcamos el fin del área imprimible, no el borde físico de la hoja.
+    const rawHeight = Math.max(canvas.scrollHeight, canvas.getBoundingClientRect().height);
+    const contentFlowHeight = Math.max(0, rawHeight - topMargin - bottomMargin);
+    const pages = Math.max(1, Math.ceil(contentFlowHeight / printableHeight));
+    const layerHeight = Math.max(rawHeight, topMargin + pages * printableHeight + bottomMargin);
+
+    layer.innerHTML = '';
+    layer.style.height = layerHeight + 'px';
+    document.getElementById('page-count-msg').textContent = '📄 ' + pages + (pages === 1 ? ' pág. A4 aprox.' : ' págs. A4 aprox.');
+
+    for (let i = 1; i < pages; i++) {
+        const writableEnd = topMargin + (i * printableHeight);
+        const marker = document.createElement('div');
+        marker.className = 'page-marker';
+        marker.style.top = writableEnd + 'px';
+        marker.innerHTML = `<span>Fin pág. ${i} · margen inf. ${margins.bottom} cm</span>`;
+        layer.appendChild(marker);
+
+        const physical = document.createElement('div');
+        physical.className = 'page-physical-marker';
+        physical.style.top = (writableEnd + bottomMargin) + 'px';
+        physical.innerHTML = `<span>Corte A4</span>`;
+        layer.appendChild(physical);
+    }
+}
+
+/* Estado */
+function collectState(){
+    return {
+        schema:'editor-doc-privado',
+        version:'v5f-menu-imagen',
+        title:document.getElementById('doc-title').value || 'Documento sin título',
+        filename:safeFilename(document.getElementById('doc-filename').value || 'documento.json'),
+        filenameEdited: document.getElementById('doc-filename').dataset.edited === '1',
+        theme:'recursos',
+        margins,
+        content:contentWithImagePaths('images/'),
+        updatedAt:new Date().toISOString()
+    };
+}
+function applyState(state){
+    if (!state || typeof state !== 'object') throw new Error('Documento inválido.');
+    document.getElementById('doc-title').value = state.title || 'Documento sin título';
+    document.getElementById('doc-filename').value = safeFilename(state.filename || state.title || 'documento');
+    document.getElementById('doc-filename').dataset.edited = state.filenameEdited ? '1' : '0';
+    applyTheme('recursos');
+
+    if (state.margins) margins = {preset:'all1', top:1, right:1, bottom:1, left:1, ...state.margins};
+    document.getElementById('margin-preset').value = margins.preset || 'all1';
+    document.getElementById('custom-margin-panel').style.display = margins.preset === 'custom' ? 'flex' : 'none';
+    setMarginInputs();
+    updateMargins();
+
+    let content = state.content || '';
+    if (!content && Array.isArray(state.pages)) {
+        content = state.pages.map((p, i) => (i ? '<div class="manual-page-break"></div>' : '') + (p || '')).join('');
+    }
+    document.getElementById('doc-canvas').innerHTML = hydrateContent(content || '');
+    normalizeAllTablesInEditor(document.getElementById('doc-canvas'));
+    ensureEdgeParagraphs();
+    saveLocalStateNow();
+    updatePageMarkersSoon();
+}
+function triggerSave(){
+    clearTimeout(saveTimeout);
+    document.getElementById('save-msg').textContent = '⏳ Local';
+    document.getElementById('save-msg').className = 'badge warn';
+    saveTimeout = setTimeout(saveLocalStateNow, 500);
+}
+function saveLocalStateNow(){
+    try{
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(collectState()));
+        document.getElementById('save-msg').textContent = '🟢 Local';
+        document.getElementById('save-msg').className = 'badge ok';
+    }catch(e){
+        document.getElementById('save-msg').textContent = '⚠️ Local';
+        document.getElementById('save-msg').className = 'badge warn';
+    }
+    updatePageMarkersSoon();
+}
+function loadLocalState(){
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) {
+        try { applyState(JSON.parse(raw)); return; } catch(e){}
+    }
+    applyTheme('recursos');
+    updateMargins();
+    updatePageMarkersSoon();
+}
+function newDocument(){
+    if (!confirm('¿Crear un documento nuevo? Se reemplaza el contenido actual local no guardado.')) return;
+    document.getElementById('doc-title').value = 'Documento sin título';
+    document.getElementById('doc-filename').value = 'documento.json';
+    document.getElementById('doc-filename').dataset.edited = '0';
+    document.getElementById('margin-preset').value = 'all1';
+    margins = {preset:'all1', top:1, right:1, bottom:1, left:1};
+    setMarginInputs();
+    updateMargins();
+    applyTheme('recursos');
+    document.getElementById('doc-canvas').innerHTML = '';
+    localStorage.removeItem(STORAGE_KEY);
+    document.getElementById('cloud-msg').textContent = '📁 Sin guardar';
+    updatePageMarkersSoon();
+}
+
+/* Guardado local */
+async function saveDocument(){
+    const state = collectState();
+    const filename = safeFilename(document.getElementById('doc-filename').value);
+    state.filename = filename;
+    document.getElementById('doc-filename').value = filename;
+    try{
+        const r = await Instalacion.saveDraft(filename, JSON.stringify(state, null, 2));
+        document.getElementById('cloud-msg').textContent = '📁 ' + filename;
+        document.getElementById('cloud-msg').className = 'badge ok';
+        saveLocalStateNow();
+    }catch(e){ alert('No se pudo guardar: ' + e.message); }
+}
+function openDocuments(){
+    Instalacion.openDrafts({ onOpen: (text, name) => importDocumentText(text, name) });
+}
+function importDocumentText(text, name){
+    if (!Instalacion.acceptKind(text, name, 'editor')) return;
+    try{
+        applyState(JSON.parse(text));
+        document.getElementById('cloud-msg').textContent = '📁 ' + (name||'');
+        document.getElementById('cloud-msg').className = 'badge ok';
+        Instalacion.toast('✅ Abierto: ' + (name||''));
+    }catch(e){ alert('No se pudo abrir: ' + e.message); }
+}
+
+/* Selección y comandos */
+function getEditorFromSelection(){
+    const sel = window.getSelection();
+    if (!sel || !sel.rangeCount) return null;
+    let node = sel.getRangeAt(0).startContainer;
+    if (node.nodeType === 3) node = node.parentNode;
+    return node?.closest?.('#doc-canvas') || null;
+}
+function saveSelection(){
+    const sel = window.getSelection();
+    if (sel && sel.rangeCount) {
+        savedRange = sel.getRangeAt(0).cloneRange();
+        const ed = getEditorFromSelection();
+        if (ed) activeEditor = ed;
+    }
+}
+function restoreSelection(){
+    if (savedRange) {
+        const sel = window.getSelection();
+        sel.removeAllRanges();
+        sel.addRange(savedRange);
+    }
+}
+function ensureActiveEditor(){
+    activeEditor = document.getElementById('doc-canvas');
+    activeEditor.focus();
+    return activeEditor;
+}
+function execCmd(cmd, val=null){
+    ensureActiveEditor();
+    document.execCommand(cmd,false,val);
+    triggerSave();
+}
+function copySelection(){
+    ensureActiveEditor();
+    document.execCommand('copy');
+}
+function openColorMenu(btn){
+    placePopupNearButton(document.getElementById('color-popup'), btn);
+}
+function execColor(color){
+    restoreSelection();
+    ensureActiveEditor();
+    document.execCommand('foreColor', false, color);
+    document.getElementById('color-popup').style.display = 'none';
+    triggerSave();
+}
+function applyFontSize(select){
+    const size = select.value;
+    if (!size) return;
+    restoreSelection();
+    ensureActiveEditor();
+    const sel = window.getSelection();
+    if (!sel.rangeCount) return;
+    if (sel.isCollapsed) {
+        document.execCommand('insertHTML', false, `<span style="font-size:${size};">&nbsp;</span>`);
+    } else {
+        document.execCommand('fontSize', false, '7');
+        activeEditor.querySelectorAll('font[size="7"]').forEach(font => {
+            const span = document.createElement('span');
+            span.style.fontSize = size;
+            while (font.firstChild) span.appendChild(font.firstChild);
+            font.replaceWith(span);
+        });
+    }
+    select.value = '';
+    triggerSave();
+}
+function changeLineHeight(select){
+    restoreSelection();
+    const sel = window.getSelection();
+    if (!sel.rangeCount) return;
+    let node = sel.getRangeAt(0).commonAncestorContainer;
+    if (node.nodeType === 3) node = node.parentNode;
+    const blocks = ['P','DIV','LI','TD','TH','H1','H2','H3','H4','SPAN'];
+    let block = node;
+    while (block && block.id !== 'doc-canvas') {
+        if (blocks.includes(block.tagName)) break;
+        block = block.parentNode;
+    }
+    if (block && block.id !== 'doc-canvas') block.style.lineHeight = select.value;
+    triggerSave();
+}
+
+/* Imágenes */
+function openImageGallery(){
+    ensureActiveEditor();
+    saveSelection();
+    Instalacion.openGallery({ onPick: name => { restoreSelection(); insertImageByName(name); } });
+}
+function insertImageByName(name){
+    const src = resolveImageSrc(name);
+    insertHTMLAtCursor(`<img src="${src}" data-img="${escapeAttr(name)}" style="max-width:100%;height:auto;display:block;margin:10px 0;">`);
+}
+function triggerLocalImage(){
+    ensureActiveEditor();
+    saveSelection();
+    document.getElementById('localImageInput').click();
+}
+async function handleLocalImageUpload(input){
+    const file = input.files[0];
+    if (!file) return;
+    input.value = '';
+    restoreSelection();
+    if (Instalacion.connected){
+        try{ const name = await Instalacion.addImage(file); restoreSelection(); insertImageByName(name); }
+        catch(e){ alert('No se pudo copiar la imagen a images/: ' + e.message); }
+        return;
+    }
+    if (!confirm('La carpeta de trabajo no está conectada, así que la imagen quedaría incrustada en este documento (solo sirve para imprimir ahora, no se puede reabrir con ruta).\n\n¿Insertarla igual?')) return;
+    const reader = new FileReader();
+    reader.onload = e => {
+        const img = new Image();
+        img.onload = () => {
+            const canvas = document.createElement('canvas');
+            let w = img.width, h = img.height; const max = 1000;
+            if (w > max) { h *= max / w; w = max; }
+            canvas.width = w; canvas.height = h;
+            canvas.getContext('2d').drawImage(img,0,0,w,h);
+            const png = /png|gif|webp|svg/i.test(file.type);
+            const dataUrl = canvas.toDataURL(png ? 'image/png' : 'image/jpeg', .8);
+            insertHTMLAtCursor(`<img src="${dataUrl}" style="max-width:100%;height:auto;display:block;margin:10px 0;">`);
+        };
+        img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+}
+
+function handleEditorClick(e){
+    if (e.target.tagName === 'IMG') {
+        selectEditorImage(e.target);
+        return;
+    }
+    const cell = e.target.closest('td') || e.target.closest('th');
+    if (cell && cell.closest('#doc-canvas')) activeTableCell = cell;
+    if (cell && document.getElementById('table-floating-menu').style.display==='block'){ tfCells=selectedCells(); syncTfColWidth(); }
+}
+function selectEditorImage(img){
+    if (selectedImg) selectedImg.classList.remove('selected-image-editor');
+    selectedImg = img;
+    selectedImg.classList.add('selected-image-editor');
+    updateImageResizeHandle();
+}
+function clearSelectedImage(){
+    if (selectedImg) selectedImg.classList.remove('selected-image-editor');
+    selectedImg = null; imageResizeState = null;
+    ['img-resize-handle','img-resize-label','img-delete-btn','img-context-menu'].forEach(id => document.getElementById(id).style.display='none');
+}
+function updateImageResizeHandle(){
+    const handle=document.getElementById('img-resize-handle'), label=document.getElementById('img-resize-label'), del=document.getElementById('img-delete-btn'), menu=document.getElementById('img-context-menu');
+    if (!selectedImg || !document.body.contains(selectedImg)) {
+        handle.style.display=label.style.display=del.style.display=menu.style.display='none';
+        return;
+    }
+    const r=selectedImg.getBoundingClientRect();
+    handle.style.left=(window.scrollX+r.right-9)+'px'; handle.style.top=(window.scrollY+r.bottom-9)+'px'; handle.style.display='block';
+    label.style.left=(window.scrollX+r.left)+'px'; label.style.top=(window.scrollY+r.bottom+10)+'px'; label.style.display='block';
+    del.style.left=(window.scrollX+r.right-14)+'px'; del.style.top=(window.scrollY+r.top-14)+'px'; del.style.display='block';
+
+    const menuWidth = 280;
+    let left = window.scrollX + r.left;
+    left = Math.max(8, Math.min(left, window.scrollX + window.innerWidth - menuWidth - 12));
+    menu.style.left = left + 'px';
+    menu.style.top = (window.scrollY + r.bottom + 34) + 'px';
+    menu.style.display = 'block';
+}
+function startImageResize(e){
+    if (!selectedImg) return;
+    e.preventDefault(); e.stopPropagation();
+    const r=selectedImg.getBoundingClientRect();
+    const parent=selectedImg.closest('#doc-canvas') || selectedImg.parentElement;
+    imageResizeState={startX:e.clientX,startWidth:r.width,maxWidth:Math.max(80,parent.getBoundingClientRect().width-20)};
+    e.target.setPointerCapture?.(e.pointerId);
+}
+function handleImageResizeMove(e){
+    if (!imageResizeState || !selectedImg) return;
+    let nw=imageResizeState.startWidth + (e.clientX-imageResizeState.startX);
+    nw=Math.max(40,Math.min(nw,imageResizeState.maxWidth));
+    selectedImg.style.width=Math.round(nw)+'px';
+    selectedImg.style.maxWidth='100%'; selectedImg.style.height='auto';
+    updateImageResizeHandle();
+}
+function stopImageResize(){
+    if (!imageResizeState) return;
+    imageResizeState=null;
+    triggerSave();
+    updateImageResizeHandle();
+}
+function setImageLayout(mode){
+    if(!selectedImg) return;
+    selectedImg.style.maxWidth = '100%';
+    selectedImg.style.height = 'auto';
+    selectedImg.style.clear = '';
+
+    if(mode === 'left'){
+        selectedImg.style.float = 'none';
+        selectedImg.style.display = 'block';
+        selectedImg.style.margin = '10px auto 10px 0';
+        selectedImg.style.verticalAlign = '';
+    } else if(mode === 'center'){
+        selectedImg.style.float = 'none';
+        selectedImg.style.display = 'block';
+        selectedImg.style.margin = '10px auto';
+        selectedImg.style.verticalAlign = '';
+    } else if(mode === 'right'){
+        selectedImg.style.float = 'none';
+        selectedImg.style.display = 'block';
+        selectedImg.style.margin = '10px 0 10px auto';
+        selectedImg.style.verticalAlign = '';
+    } else if(mode === 'inline'){
+        selectedImg.style.float = 'none';
+        selectedImg.style.display = 'inline-block';
+        selectedImg.style.margin = '0 6px';
+        selectedImg.style.verticalAlign = 'middle';
+    } else if(mode === 'wrapRight'){
+        // Imagen a la izquierda; el texto rodea por la derecha.
+        selectedImg.style.float = 'left';
+        selectedImg.style.display = 'block';
+        selectedImg.style.margin = '0 12px 8px 0';
+        selectedImg.style.verticalAlign = '';
+    } else if(mode === 'wrapLeft'){
+        // Imagen a la derecha; el texto rodea por la izquierda.
+        selectedImg.style.float = 'right';
+        selectedImg.style.display = 'block';
+        selectedImg.style.margin = '0 0 8px 12px';
+        selectedImg.style.verticalAlign = '';
+    } else {
+        selectedImg.style.float = 'none';
+        selectedImg.style.display = 'block';
+        selectedImg.style.margin = '10px 0';
+        selectedImg.style.verticalAlign = '';
+    }
+
+    triggerSave();
+    updatePageMarkersSoon();
+    updateImageResizeHandle();
+}
+
+function deleteSelectedImg(){
+    if (selectedImg && confirm('¿Borrar esta imagen?')) {
+        selectedImg.remove();
+        clearSelectedImage();
+        triggerSave();
+    }
+}
+
+/* Emojis / bloques */
+function loadEmojis(){
+    const c=document.getElementById('emoji-popup');
+    const groups=[
+        ['Caras',['😀','😉','🤓','😌','😎','🤔','😮','🙂']],
+        ['Escolar',['📌','✏️','📚','📖','📝','✅','⚠️','💡','🔎','⭐']],
+        ['Matemática',['➕','➖','✖️','➗','🟰','📐','📏','🔢','🎲','🔴','🟡','🟢','🔵']]
+    ];
+    c.innerHTML=groups.map(g=>`<div class="popup-category-title">${g[0]}</div><div class="emoji-grid">${g[1].map(e=>`<button class="emoji-btn" onmousedown="event.preventDefault(); insertEmoji('${e}')">${e}</button>`).join('')}</div>`).join('');
+}
+function openEmojiMenu(btn){placePopupNearButton(document.getElementById('emoji-popup'), btn)}
+function insertEmoji(char){insertHTMLAtCursor(char)}
+function placePopupNearButton(popup, btn){
+    const r=btn.getBoundingClientRect();
+    popup.style.top=(r.bottom+window.scrollY+5)+'px';
+    popup.style.left=Math.min(window.scrollX+r.left, window.innerWidth-300)+'px';
+    popup.style.display='block';
+}
+function openQuickBlockMenu(btn){ensureActiveEditor(); document.getElementById('response-popup').style.display='none'; placePopupNearButton(document.getElementById('quick-block-popup'), btn)}
+function openResponseMenu(btn){ensureActiveEditor(); document.getElementById('quick-block-popup').style.display='none'; placePopupNearButton(document.getElementById('response-popup'), btn)}
+function insertHTMLAtCursor(html){
+    restoreSelection();
+    ensureActiveEditor();
+    document.execCommand('insertHTML', false, html);
+    triggerSave();
+    updatePageMarkersSoon();
+}
+function quickTable(cellClass, title, text){
+    return `<table class="doc-quick-table" data-quick-block="1"><tbody><tr><td class="${cellClass}"><strong>${title}</strong><br>${text}</td></tr></tbody></table>`;
+}
+var BLOCK_SEL = 'table, .doc-lines, .manual-page-break';
+var respKind = 'solid', respGap = 30, currentBlock = null;
+try{ respKind = localStorage.getItem('ed_resp_kind') || 'solid'; respGap = parseInt(localStorage.getItem('ed_resp_gap')||'30',10) || 30; }catch(e){}
+
+function canvasEl(){return document.getElementById('doc-canvas')}
+function topLevelOf(node){
+    const ed = canvasEl();
+    while(node && node.parentNode !== ed){ node = node.parentNode; if(!node) return null; }
+    return node;
+}
+function isBlockEl(el){return !!(el && el.nodeType===1 && el.matches(BLOCK_SEL))}
+function isEmptyPara(el){
+    return !!(el && el.nodeType===1 && /^(P|DIV)$/.test(el.tagName) && !el.matches(BLOCK_SEL) && !el.querySelector('img,table') && !el.textContent.replace(/\u200b/g,'').trim());
+}
+function setCaret(el, atEnd){
+    const r=document.createRange(), s=window.getSelection();
+    r.selectNodeContents(el); r.collapse(!atEnd);
+    s.removeAllRanges(); s.addRange(r);
+    canvasEl().focus();
+    savedRange = r.cloneRange();
+}
+function newParagraph(){const p=document.createElement('p'); p.innerHTML='<br>'; return p}
+
+/* Inserta un bloque SIEMPRE al nivel principal del documento (nunca dentro de otra tabla),
+   debajo del párrafo donde estás, y deja un párrafo libre para seguir escribiendo. */
+function insertBlock(html, opts){
+    opts = opts || {};
+    const ed = ensureActiveEditor();
+    restoreSelection();
+    const sel = window.getSelection();
+    let anchor = null;
+    if (sel.rangeCount && ed.contains(sel.anchorNode)) anchor = topLevelOf(sel.anchorNode);
+    if (anchor && anchor.nodeType===3){ const w=document.createElement('p'); anchor.parentNode.insertBefore(w, anchor); w.appendChild(anchor); anchor=w; }
+    const range = document.createRange();
+    let replaceEmpty = false;
+    if (anchor && isEmptyPara(anchor)) { range.selectNode(anchor); replaceEmpty = true; }
+    else if (anchor) { range.setStartAfter(anchor); range.collapse(true); }
+    else { range.selectNodeContents(ed); range.collapse(false); }
+    sel.removeAllRanges(); sel.addRange(range);
+    const tail = '<p><br></p>';
+    const marked = html.replace(/^<(\w+)/, '<$1 data-new="1"');
+    document.execCommand('insertHTML', false, marked + tail);
+    const made = ed.querySelector('[data-new="1"]');
+    if (made) made.removeAttribute('data-new');
+    ensureEdgeParagraphs();
+    triggerSave(); updatePageMarkersSoon();
+    if (made){
+        if (opts.focusCell){
+            const cell = made.querySelector('td,th') || made;
+            const br = cell.querySelector('br');
+            let target = null;
+            if (br && br.nextSibling && br.nextSibling.nodeType===3) target = br.nextSibling;
+            if (target){
+                const r=document.createRange(), s=window.getSelection();
+                r.selectNodeContents(target); s.removeAllRanges(); s.addRange(r); savedRange=r.cloneRange(); ed.focus();
+            } else setCaret(cell, true);
+        } else {
+            const nxt = made.nextElementSibling;
+            if (nxt) setCaret(nxt, false);
+        }
+        setBlockBar(made);
+    }
+    return made;
+}
+function ensureEdgeParagraphs(){
+    const ed = canvasEl();
+    if (!ed.firstChild) { ed.innerHTML = '<p><br></p>'; return; }
+    if (isBlockEl(ed.firstElementChild) && ed.firstChild === ed.firstElementChild) ed.insertBefore(newParagraph(), ed.firstChild);
+    if (isBlockEl(ed.lastElementChild) && ed.lastChild === ed.lastElementChild) ed.appendChild(newParagraph());
+}
+
+function insertQuickBlock(type){
+    const blocks={
+        consignaMatematica: quickTable('quick-math', '📌 Consigna Matemática:', 'Escribí la consigna aquí.'),
+        consignaLengua: quickTable('quick-language', '📌 Consigna Lengua:', 'Escribí la consigna aquí.'),
+        respuesta: quickTable('quick-answer', '✏️ Para responder:', '<br>'),
+        ayuda: quickTable('quick-help', '💡 Ayuda:', 'Agregá una orientación breve.'),
+        recorda: quickTable('quick-remember', '⚠️ Recordá:', 'Escribí aquí una aclaración importante.'),
+        revision: quickTable('quick-review', '✅ Revisión:', 'Antes de terminar, revisá tu respuesta.')
+    };
+    document.getElementById('quick-block-popup').style.display='none';
+    insertBlock(blocks[type]||blocks.consignaMatematica, {focusCell:true});
+}
+
+/* Renglones: un solo bloque con atributos (cantidad, separación, tipo) que se puede editar después */
+function renderLines(el){
+    const n = Math.max(1, parseInt(el.dataset.n||'3',10)), gap = parseInt(el.dataset.gap||'30',10), kind = el.dataset.kind||'solid';
+    let h='';
+    if (kind==='grid'){
+        el.style.cssText = `margin:12px 0;height:${n*gap}px;border:1px solid #9E9E9E;background-image:linear-gradient(#BDBDBD 1px,transparent 1px),linear-gradient(90deg,#BDBDBD 1px,transparent 1px);background-size:${gap}px ${gap}px;-webkit-print-color-adjust:exact;print-color-adjust:exact;`;
+    } else {
+        el.style.cssText = 'margin:12px 0;';
+        const line = kind==='dotted' ? '2px dotted #777' : '1px solid #777';
+        for(let i=0;i<n;i++) h+=`<div style="border-bottom:${line};height:${gap}px;margin:0;"></div>`;
+    }
+    el.innerHTML = h;
+}
+function linesBlock(n){
+    const el=document.createElement('div');
+    el.className='doc-lines'; el.setAttribute('contenteditable','false');
+    el.dataset.n=n; el.dataset.gap=respGap; el.dataset.kind=respKind;
+    renderLines(el);
+    return el.outerHTML;
+}
+function responseLines(n){return linesBlock(n)}
+function setRespKind(v){respKind=v; try{localStorage.setItem('ed_resp_kind',v)}catch(e){} syncRespButtons()}
+function setRespGap(v){respGap=v; try{localStorage.setItem('ed_resp_gap',String(v))}catch(e){} syncRespButtons()}
+function syncRespButtons(){
+    document.querySelectorAll('#resp-kind button').forEach(b=>b.classList.toggle('on', b.dataset.v===respKind));
+    document.querySelectorAll('#resp-gap button').forEach(b=>b.classList.toggle('on', b.dataset.v===String(respGap)));
+}
+function insertLines(n){
+    if(!n){
+        const v = parseInt(prompt('¿Cuántos renglones?','4'),10);
+        if(!v || v<1) return;
+        n = Math.min(v, 40);
+    }
+    document.getElementById('response-popup').style.display='none';
+    insertBlock(linesBlock(n));
+}
+function insertResponseElement(type){
+    let html='';
+    if(type==='studentData') {
+        html = `<table class="doc-response-table student-data"><tbody><tr><td>
+            <div class="student-data-line">
+                <span>Alumno/a _________________________</span>
+                <span>Grado: _________________________</span>
+                <span>Fecha: __________________</span>
+            </div>
+        </td></tr></tbody></table>`;
+    }
+    else if(type==='box') html='<table class="doc-response-table"><tbody><tr><td><br></td></tr></tbody></table>';
+    else { return insertLines(3); }
+    document.getElementById('response-popup').style.display='none';
+    insertBlock(html, {focusCell:true});
+}
+
+/* ---- Barra flotante del bloque ---- */
+function blockFromNode(node){
+    if(!node || !canvasEl().contains(node)) return null;
+    const t = topLevelOf(node);
+    return (t && t.nodeType===1 && t.matches('table, .doc-lines')) ? t : null;
+}
+function setBlockBar(block){
+    const bar=document.getElementById('block-bar');
+    if(currentBlock && currentBlock!==block) currentBlock.classList.remove('block-active');
+    currentBlock = block;
+    if(block) block.classList.add('block-active');
+    if(!block || !block.isConnected){ bar.style.display='none'; currentBlock=null; return; }
+    const isQuick = block.matches('table.doc-quick-table');
+    const isLines = block.matches('.doc-lines');
+    document.getElementById('bb-type').style.display = isQuick ? '' : 'none';
+    document.getElementById('bb-lines').style.display = isLines ? '' : 'none';
+    document.getElementById('bb-tbl').style.display = (block.matches('table') && !isQuick && !block.matches('table.doc-response-table')) ? '' : 'none';
+    if(isQuick){
+        const td=block.querySelector('td'); const cls=['quick-math','quick-language','quick-answer','quick-help','quick-remember','quick-review'].find(c=>td&&td.classList.contains(c));
+        if(cls) document.getElementById('bb-type').value=cls;
+    }
+    bar.style.display='flex';
+    positionBlockBar();
+}
+function positionBlockBar(){
+    const bar=document.getElementById('block-bar');
+    if(!currentBlock || !currentBlock.isConnected){ bar.style.display='none'; return; }
+    const r=currentBlock.getBoundingClientRect();
+    const tb=document.querySelector('.main-toolbar'); const minTop = tb ? tb.getBoundingClientRect().bottom + 4 : 4;
+    const bw=bar.offsetWidth||320;
+    let top = r.top - bar.offsetHeight - 4;
+    if(top < minTop) top = r.top + 4;
+    if(r.bottom < minTop || r.top > window.innerHeight){ bar.style.visibility='hidden'; } else bar.style.visibility='visible';
+    bar.style.top = Math.max(minTop, top)+'px';
+    bar.style.left = Math.max(8, Math.min(r.right - bw, window.innerWidth - bw - 8))+'px';
+}
+function bbType(cls){
+    if(!currentBlock) return;
+    const td=currentBlock.querySelector('td'); if(!td) return;
+    ['quick-math','quick-language','quick-answer','quick-help','quick-remember','quick-review'].forEach(c=>td.classList.remove(c));
+    td.classList.add(cls); triggerSave();
+}
+function bbLines(d){
+    if(!currentBlock || !currentBlock.matches('.doc-lines')) return;
+    const n=Math.max(1, Math.min(60, parseInt(currentBlock.dataset.n||'3',10)+d));
+    currentBlock.dataset.n=n; renderLines(currentBlock); triggerSave(); positionBlockBar();
+}
+function bbGap(){
+    if(!currentBlock || !currentBlock.matches('.doc-lines')) return;
+    const order=[24,30,38], cur=parseInt(currentBlock.dataset.gap||'30',10);
+    currentBlock.dataset.gap=order[(order.indexOf(cur)+1)%order.length]; renderLines(currentBlock); triggerSave(); positionBlockBar();
+}
+function bbMove(dir){
+    const b=currentBlock; if(!b) return;
+    const sib = dir<0 ? b.previousElementSibling : b.nextElementSibling;
+    if(!sib) return;
+    if(dir<0) b.parentNode.insertBefore(b, sib); else b.parentNode.insertBefore(sib, b);
+    ensureEdgeParagraphs(); triggerSave(); updatePageMarkersSoon(); positionBlockBar();
+    b.scrollIntoView({block:'nearest'});
+}
+function bbPara(where){
+    const b=currentBlock; if(!b) return;
+    const sib = where==='before' ? b.previousElementSibling : b.nextElementSibling;
+    if(sib && !isBlockEl(sib)) { setCaret(sib, where==='before'); }
+    else { const p=newParagraph(); b.parentNode.insertBefore(p, where==='before' ? b : b.nextSibling); setCaret(p, false); triggerSave(); updatePageMarkersSoon(); }
+}
+function bbDup(){
+    const b=currentBlock; if(!b) return;
+    const c=b.cloneNode(true); c.classList.remove('block-active');
+    b.parentNode.insertBefore(c, b.nextSibling);
+    triggerSave(); updatePageMarkersSoon(); setBlockBar(c);
+}
+function bbDel(){
+    const b=currentBlock; if(!b) return;
+    if(!confirm('¿Borrar este bloque?')) return;
+    const nxt=b.nextElementSibling||b.previousElementSibling;
+    b.remove(); currentBlock=null; document.getElementById('block-bar').style.display='none';
+    ensureEdgeParagraphs();
+    if(nxt && !isBlockEl(nxt)) setCaret(nxt,false);
+    triggerSave(); updatePageMarkersSoon();
+}
+
+/* Salir de un bloque con el teclado */
+function exitBlock(block, where){
+    const sib = where==='before' ? block.previousElementSibling : block.nextElementSibling;
+    if(sib && !isBlockEl(sib)) { setCaret(sib, where==='before'); return; }
+    const p=newParagraph(); block.parentNode.insertBefore(p, where==='before' ? block : block.nextSibling);
+    setCaret(p,false); triggerSave(); updatePageMarkersSoon();
+}
+function caretEdge(cell, sel, atEnd){
+    const r=document.createRange(); r.selectNodeContents(cell);
+    if(atEnd) r.setStart(sel.focusNode, sel.focusOffset); else r.setEnd(sel.focusNode, sel.focusOffset);
+    return r.toString().replace(/\u200b/g,'')==='' && !r.cloneContents().querySelector('img,table');
+}
+function handleBlockKeys(e){
+    const sel=window.getSelection();
+    if(!sel.rangeCount || !canvasEl().contains(sel.anchorNode)) return false;
+    const top=topLevelOf(sel.anchorNode);
+    if(!top || top.nodeType!==1 || !top.matches('table')) return false;
+    if(e.key==='Enter' && (e.ctrlKey||e.metaKey)){ e.preventDefault(); exitBlock(top, e.shiftKey?'before':'after'); return true; }
+    const single = top.matches('table.doc-quick-table, table.doc-response-table');
+    if(e.key==='Tab' && single){ e.preventDefault(); exitBlock(top, e.shiftKey?'before':'after'); return true; }
+    if(!sel.isCollapsed || e.shiftKey || e.ctrlKey || e.altKey || e.metaKey) return false;
+    const cell = (sel.anchorNode.nodeType===1?sel.anchorNode:sel.anchorNode.parentNode).closest('td,th');
+    if(!cell) return false;
+    const cells=top.querySelectorAll('td,th');
+    if((e.key==='ArrowDown'||e.key==='ArrowRight') && cell===cells[cells.length-1] && caretEdge(cell,sel,true)){ e.preventDefault(); exitBlock(top,'after'); return true; }
+    if((e.key==='ArrowUp'||e.key==='ArrowLeft') && cell===cells[0] && caretEdge(cell,sel,false)){ e.preventDefault(); exitBlock(top,'before'); return true; }
+    return false;
+}
+
+function insertPageBreak(){
+    insertHTMLAtCursor('<div class="manual-page-break"></div><p><br></p>');
+}
+
+/* Teclado
+   Los bloques rápidos nuevos están armados como tablas de una celda.
+   Por eso Enter, Shift+Enter y pegado de varios párrafos quedan dentro del bloque/celda. */
+
+/* Tablas */
+function handleTabKey(e){
+    if(handleBlockKeys(e)) return;
+    if(e.key!=='Tab') return;
+    const sel=window.getSelection(); if(!sel.rangeCount) return;
+    let node=sel.getRangeAt(0).startContainer;
+    while(node && node.nodeName!=='TD' && node.nodeName!=='TH'){ if(node.id==='doc-canvas') return; node=node.parentNode; }
+    if(node && (node.nodeName==='TD'||node.nodeName==='TH')){
+        const table = node.closest('table');
+        if (table && (table.classList.contains('doc-quick-table') || table.classList.contains('doc-response-table'))) return;
+        e.preventDefault();
+        const cells=Array.from(table.querySelectorAll('td,th'));
+        const idx=cells.indexOf(node);
+        if(!e.shiftKey && idx<cells.length-1) focusCell(cells[idx+1]);
+        else if(e.shiftKey && idx>0) focusCell(cells[idx-1]);
+    }
+}
+function focusCell(cell){
+    const r=document.createRange(), s=window.getSelection();
+    r.selectNodeContents(cell); r.collapse(true); s.removeAllRanges(); s.addRange(r);
+}
+function clamp(v,min,max,fb){const n=parseInt(v,10);return Number.isNaN(n)?fb:Math.max(min,Math.min(max,n))}
+function getTableOptions(){
+    return {
+        rows:clamp(document.getElementById('inputRows').value,1,30,3),
+        cols:clamp(document.getElementById('inputCols').value,1,12,3),
+        width:document.getElementById('tableWidth').value||'100%',
+        align:document.getElementById('tableAlign').value||'left',
+        borderWidth:clamp(document.getElementById('tableBorderWidth').value,0,5,1),
+        borderColor:document.getElementById('tableBorderColor').value||'#000000',
+        headerBg:document.getElementById('tableHeaderBg').value||'#eeeeee',
+        padding:clamp(document.getElementById('tablePadding').value,2,30,8),
+        headerRow:document.getElementById('tableHeaderRow').checked,
+        headerCol:document.getElementById('tableHeaderCol').checked,
+        colWidths:(document.getElementById('tableColWidths')||{}).value||''
+    };
+}
+function cellStyle(opts,isHeader){
+    const border=opts.borderWidth>0?`${opts.borderWidth}px solid ${opts.borderColor}`:'none';
+    return `border:${border};padding:${opts.padding}px;text-align:${opts.align};vertical-align:top;overflow-wrap:anywhere;word-break:break-word;${isHeader?`background:${opts.headerBg};font-weight:700;`:''}`;
+}
+function parseColWidths(txt, cols){
+    const parts = String(txt||'').split(/[,;\s]+/).map(x=>parseFloat(x)).filter(x=>x>0);
+    if(parts.length!==cols) return null;
+    const sum = parts.reduce((a,b)=>a+b,0);
+    return parts.map(x=>(x/sum*100));
+}
+function buildTableHTML(opts){
+    const custom = parseColWidths(opts.colWidths, opts.cols);
+    let html=`<table style="width:${opts.width};border-collapse:collapse;margin:10px 0;table-layout:fixed;"><colgroup>`;
+    for(let c=0;c<opts.cols;c++) html+=`<col style="width:${(custom?custom[c]:100/Math.max(1,opts.cols)).toFixed(4)}%;">`;
+    html+='</colgroup>';
+    for(let r=0;r<opts.rows;r++){
+        html+='<tr>';
+        for(let c=0;c<opts.cols;c++){
+            const isH=(opts.headerRow&&r===0)||(opts.headerCol&&c===0);
+            const tag=isH?'th':'td';
+            html+=`<${tag} style="${cellStyle(opts,isH)}">&nbsp;</${tag}>`;
+        }
+        html+='</tr>';
+    }
+    return html+'</table>';
+}
+function openTableModal(mode){
+    tableModalMode=mode;
+    const table=getCurrentTable();
+    document.getElementById('rowsBox').style.display=mode==='insert'?'block':'none';
+    document.getElementById('colsBox').style.display=mode==='insert'?'block':'none';
+    document.getElementById('colWidthsBox').style.display=mode==='insert'?'block':'none';
+    document.getElementById('tableModalTitle').textContent=mode==='insert'?'Crear tabla':'Formato de tabla';
+    document.getElementById('tableApplyBtn').textContent=mode==='insert'?'Insertar tabla':'Aplicar formato';
+    if(mode==='format' && !table) return alert('Primero hacé clic dentro de una tabla.');
+    document.getElementById('tableModal').style.display='flex';
+}
+function closeTableModal(){document.getElementById('tableModal').style.display='none'}
+function applyTableModal(){
+    const opts=getTableOptions();
+    if(tableModalMode==='insert'){
+        insertBlock(buildTableHTML(opts), {focusCell:true});
+    }else{
+        const t=getCurrentTable(); if(!t) return;
+        applyStyleToTable(t,opts); triggerSave(); positionBlockBar();
+    }
+    closeTableModal();
+}
+function getCurrentTable(){return (activeTableCell&&activeTableCell.isConnected)?activeTableCell.closest('table'):null}
+/* ---- Rejilla de columnas (soporta celdas unidas) ---- */
+function gridCols(table){
+    let n=1;
+    Array.from(table.rows).forEach(r=>{let c=0; Array.from(r.cells).forEach(x=>c+=(x.colSpan||1)); if(c>n)n=c;});
+    return n;
+}
+function cellGridIndex(cell){
+    let i=0; for(const x of cell.parentElement.cells){ if(x===cell) break; i+=(x.colSpan||1); } return i;
+}
+function cellAtGrid(row, gi){
+    let i=0; for(const x of row.cells){ const sp=x.colSpan||1; if(gi>=i && gi<i+sp) return x; i+=sp; } return null;
+}
+function readColWidths(table){
+    const cg=table.querySelector('colgroup'); if(!cg) return [];
+    return Array.from(cg.children).map(c=>parseFloat(c.style.width)||0);
+}
+function writeColWidths(table, arr){
+    let cg=table.querySelector('colgroup');
+    if(!cg){cg=document.createElement('colgroup'); table.insertBefore(cg, table.firstChild);}
+    cg.innerHTML='';
+    arr.forEach(w=>{const col=document.createElement('col'); col.style.width=w.toFixed(3)+'%'; cg.appendChild(col);});
+}
+function ensureFixedColgroup(table){
+    const n=gridCols(table); const cur=readColWidths(table);
+    if(cur.length===n && cur.every(w=>w>0)) return;
+    writeColWidths(table, Array(n).fill(100/n));
+}
+function setColWidthPct(v){
+    const table=getCurrentTable(); if(!table||!activeTableCell) return;
+    ensureFixedColgroup(table);
+    const w=readColWidths(table), i=cellGridIndex(activeTableCell);
+    if(w.length<2) return;
+    const nv=Math.max(4, Math.min(100-4*(w.length-1), parseFloat(v)||w[i]));
+    const others=w.reduce((a,b,k)=>k===i?a:a+b,0), rest=100-nv;
+    const nw=w.map((x,k)=>k===i?nv:(others>0?x/others*rest:rest/(w.length-1)));
+    writeColWidths(table,nw); triggerSave(); positionBlockBar();
+}
+function equalizeCols(){
+    const table=getCurrentTable(); if(!table) return;
+    const n=gridCols(table); writeColWidths(table, Array(n).fill(100/n)); triggerSave(); syncTfColWidth();
+}
+function syncTfColWidth(){
+    const t=getCurrentTable(), inp=document.getElementById('tf-colw'); if(!inp) return;
+    if(!t||!activeTableCell){inp.value=''; return;}
+    const w=readColWidths(t)[cellGridIndex(activeTableCell)]; inp.value=w?Math.round(w*10)/10:'';
+}
+function replaceCellTag(cell,tag){
+    if(cell.tagName===tag) return cell;
+    const nc=document.createElement(tag.toLowerCase());
+    nc.innerHTML=cell.innerHTML; nc.setAttribute('style',cell.getAttribute('style')||''); cell.replaceWith(nc); return nc;
+}
+function applyStyleToTable(table,opts){
+    table.style.width=opts.width; table.style.borderCollapse='collapse'; table.style.margin='10px 0'; table.style.tableLayout='fixed';
+    ensureFixedColgroup(table);
+    Array.from(table.rows).forEach((row,r)=>{
+        Array.from(row.cells).forEach((cell,c)=>{
+            const isH=(opts.headerRow&&r===0)||(opts.headerCol&&c===0);
+            cell=replaceCellTag(cell,isH?'TH':'TD');
+            cell.setAttribute('style',cellStyle(opts,isH));
+        });
+    });
+}
+function cloneCell(source){
+    const c=document.createElement(source.tagName==='TH'?'th':'td');
+    c.innerHTML='&nbsp;'; c.setAttribute('style',source.getAttribute('style')||'border:1px solid #000;padding:8px;'); return c;
+}
+/* ---- Selección de celdas y alcance ---- */
+var tfScope='cell', tfCells=[];
+function setTfScope(v){tfScope=v; document.querySelectorAll('#tf-scope .tf-btn').forEach(b=>b.classList.toggle('on', b.dataset.v===v));}
+function selectedCells(){
+    const table=getCurrentTable(); if(!table) return [];
+    const sel=window.getSelection();
+    if(sel.rangeCount && !sel.isCollapsed){
+        const r=sel.getRangeAt(0);
+        const hit=Array.from(table.querySelectorAll('td,th')).filter(c=>r.intersectsNode(c));
+        if(hit.length>1){
+            // rectángulo entre la primera y la última celda tocadas (como en una planilla)
+            const gi=hit.map(cellGridIndex), ri=hit.map(c=>c.parentElement.rowIndex);
+            const g1=Math.min(...gi), g2=Math.max(...hit.map((c,k)=>gi[k]+(c.colSpan||1)-1)), r1=Math.min(...ri), r2=Math.max(...ri);
+            return Array.from(table.querySelectorAll('td,th')).filter(c=>{const g=cellGridIndex(c), rr=c.parentElement.rowIndex; return rr>=r1&&rr<=r2&&g+(c.colSpan||1)-1>=g1&&g<=g2;});
+        }
+    }
+    return activeTableCell?[activeTableCell]:[];
+}
+function targetCells(){
+    const table=getCurrentTable(); if(!table||!activeTableCell) return [];
+    const all=Array.from(table.querySelectorAll('td,th'));
+    if(tfScope==='table') return all;
+    if(tfScope==='row') return Array.from(activeTableCell.parentElement.cells);
+    if(tfScope==='header') return Array.from(table.rows[0].cells);
+    if(tfScope==='col'){const gi=cellGridIndex(activeTableCell); return Array.from(table.rows).map(r=>cellAtGrid(r,gi)).filter(Boolean);}
+    return tfCells.length?tfCells.filter(c=>c.isConnected):[activeTableCell];
+}
+function syncActiveCell(){
+    const sel=window.getSelection();
+    if(sel.rangeCount && canvasEl().contains(sel.anchorNode)){
+        const n=sel.anchorNode.nodeType===1?sel.anchorNode:sel.anchorNode.parentNode;
+        const c=n.closest('td,th'); if(c && canvasEl().contains(c)) { activeTableCell=c; return; }
+    }
+    if((!activeTableCell||!activeTableCell.isConnected) && currentBlock && currentBlock.matches('table')) activeTableCell=currentBlock.querySelector('td,th');
+}
+function closeTableMenu(){document.getElementById('table-floating-menu').style.display='none'}
+function openTableActionsMenu(){
+    syncActiveCell();
+    if(!activeTableCell || !activeTableCell.isConnected) return alert('Primero hacé clic dentro de una tabla.');
+    tfCells=selectedCells();
+    const menu=document.getElementById('table-floating-menu');
+    const tb=document.querySelector('.main-toolbar'); const top=Math.max(8,(tb?tb.getBoundingClientRect().bottom:0)+8);
+    menu.style.display='block';
+    menu.style.top=top+'px'; menu.style.right='12px'; menu.style.left='auto';
+    menu.style.maxHeight=(window.innerHeight-top-12)+'px';
+    syncTfColWidth();
+}
+function colorLum(hex){
+    const m=/^#?([0-9a-f]{6})$/i.exec(hex||''); if(!m) return 1;
+    const n=parseInt(m[1],16), r=(n>>16)&255, g=(n>>8)&255, b=n&255;
+    return (0.299*r+0.587*g+0.114*b)/255;
+}
+function tableColor(color){
+    targetCells().forEach(c=>{
+        if(!color){ c.style.backgroundColor=''; return; }
+        c.style.backgroundColor=color;
+        const lum=colorLum(color), fg=(c.style.color||'').replace(/\s/g,'').toLowerCase();
+        if(lum<0.45) c.style.color='#ffffff';
+        else if(fg==='#ffffff'||fg==='rgb(255,255,255)'||fg==='white') c.style.color='#000000';
+    });
+    triggerSave();
+}
+function tableTextColor(color){ targetCells().forEach(c=>{c.style.color=color}); triggerSave(); }
+function tableAlignCells(a){ targetCells().forEach(c=>{c.style.textAlign=a}); triggerSave(); }
+function tableVAlignCells(a){ targetCells().forEach(c=>{c.style.verticalAlign=a}); triggerSave(); }
+function tableBorders(w){
+    const t=getCurrentTable(); if(!t) return;
+    const color=document.getElementById('tf-border').value||'#000000';
+    t.querySelectorAll('td,th').forEach(c=>{c.style.border = w>0 ? `${w}px solid ${color}` : 'none';});
+    triggerSave();
+}
+function tableBorderColorAll(color){
+    const t=getCurrentTable(); if(!t) return;
+    t.querySelectorAll('td,th').forEach(c=>{ if(c.style.borderStyle!=='none' && c.style.border!=='none') c.style.borderColor=color; });
+    triggerSave();
+}
+function tableAction(action){
+    const table=getCurrentTable(); if(!table||!activeTableCell) return;
+    const row=activeTableCell.parentElement, ci=cellGridIndex(activeTableCell), ri=row.rowIndex;
+    const hasSpan=Array.from(table.querySelectorAll('td,th')).some(c=>(c.colSpan||1)>1);
+    const needFlat=()=>{ if(hasSpan){alert('Esta tabla tiene celdas unidas. Primero usá "Separar" y después agregá o quitá columnas.'); return true;} return false; };
+    if(action==='addRow'||action==='addRowAbove'){
+        const nr=table.insertRow(action==='addRow'?ri+1:ri);
+        Array.from(row.cells).forEach(src=>{const c=cloneCell(src); c.colSpan=src.colSpan||1; if(c.colSpan===1) c.removeAttribute('colspan'); nr.appendChild(c);});
+    }
+    else if(action==='delRow'){ if(table.rows.length<=1) return alert('La tabla debe conservar al menos una fila.'); table.deleteRow(ri); }
+    else if(action==='addCol'||action==='addColLeft'){
+        if(needFlat()) return;
+        ensureFixedColgroup(table);
+        const w=readColWidths(table), n=w.length, nw=100/(n+1);
+        const at=action==='addCol'?ci+1:ci;
+        const scaled=w.map(x=>x*n/(n+1)); scaled.splice(at,0,nw); writeColWidths(table,scaled);
+        Array.from(table.rows).forEach(r=>{const ref=r.cells[ci]||r.cells[r.cells.length-1]; r.insertBefore(cloneCell(ref), r.cells[at]||null);});
+    }
+    else if(action==='delCol'){
+        if(needFlat()) return;
+        if(row.cells.length<=1) return alert('La tabla debe conservar al menos una columna.');
+        ensureFixedColgroup(table);
+        const w=readColWidths(table); w.splice(ci,1); const sum=w.reduce((a,b)=>a+b,0)||100;
+        writeColWidths(table,w.map(x=>x/sum*100));
+        Array.from(table.rows).forEach(r=>{ if(r.cells[ci]) r.deleteCell(ci); });
+    }
+    else if(action==='mergeRight'){
+        const next=activeTableCell.nextElementSibling; if(!next) return alert('No hay celda a la derecha.');
+        if(next.textContent.replace(/\u00a0/g,' ').trim()){ activeTableCell.innerHTML=(activeTableCell.innerHTML.replace(/&nbsp;/g,'').trim()?activeTableCell.innerHTML+' ':'')+next.innerHTML; }
+        activeTableCell.colSpan=(activeTableCell.colSpan||1)+(next.colSpan||1); next.remove();
+    }
+    else if(action==='mergeRow'){
+        const cells=Array.from(row.cells); if(cells.length<2) return;
+        const first=cells[0]; let total=0;
+        cells.forEach((c,i)=>{ total+=(c.colSpan||1); if(i>0){ const t=c.textContent.replace(/\u00a0/g,' ').trim(); if(t) first.innerHTML+=' '+c.innerHTML; c.remove(); } });
+        first.colSpan=total; activeTableCell=first;
+    }
+    else if(action==='split'){
+        const span=activeTableCell.colSpan||1; if(span<2) return;
+        activeTableCell.removeAttribute('colspan');
+        for(let i=1;i<span;i++){ const c=cloneCell(activeTableCell); activeTableCell.after(c); }
+    }
+    else if(action==='deleteTable'){ if(confirm('¿Borrar tabla?')){ table.remove(); activeTableCell=null; document.getElementById('table-floating-menu').style.display='none'; setBlockBar(null); ensureEdgeParagraphs(); } }
+    if(document.body.contains(table)){ ensureFixedColgroup(table); tfCells=[]; }
+    triggerSave(); updatePageMarkersSoon(); syncTfColWidth(); positionBlockBar();
+}
+/* panel de tabla: se mueve arrastrando el título */
+(function(){
+    const menu=document.getElementById('table-floating-menu'), head=menu.querySelector('.tf-head'); let d=null;
+    head.style.cursor='move';
+    head.addEventListener('mousedown',e=>{ if(e.target.closest('button')) return; const r=menu.getBoundingClientRect(); d={x:e.clientX-r.left,y:e.clientY-r.top}; e.preventDefault(); });
+    window.addEventListener('mousemove',e=>{ if(!d) return; menu.style.left=Math.max(0,Math.min(window.innerWidth-80,e.clientX-d.x))+'px'; menu.style.top=Math.max(0,e.clientY-d.y)+'px'; menu.style.right='auto'; });
+    window.addEventListener('mouseup',()=>{d=null});
+})();
+/* ---- Arrastrar bordes para cambiar columnas y filas ---- */
+(function initTableResize(){
+    const ed=canvasEl(); let hover=null, drag=null;
+    function find(e){
+        const cell=e.target.closest&&e.target.closest('td,th'); if(!cell||!ed.contains(cell)) return null;
+        const table=cell.closest('table'); if(!table||table.parentNode!==ed) return null;
+        const r=cell.getBoundingClientRect(), single=table.matches('table.doc-quick-table');
+        if(!single && table.rows.length>=1){
+            const n=gridCols(table), gi=cellGridIndex(cell), sp=cell.colSpan||1;
+            if(Math.abs(e.clientX-r.right)<=4 && gi+sp-1<n-1) return {type:'col',table,idx:gi+sp-1};
+            if(Math.abs(e.clientX-r.left)<=4 && gi>0) return {type:'col',table,idx:gi-1};
+        }
+        if(!single && Math.abs(e.clientY-r.bottom)<=3) return {type:'row',table,row:cell.parentElement};
+        if(!single && Math.abs(e.clientY-r.top)<=3 && cell.parentElement.rowIndex>0) return {type:'row',table,row:table.rows[cell.parentElement.rowIndex-1]};
+        return null;
+    }
+    ed.addEventListener('mousemove', e=>{
+        if(drag) return;
+        hover=find(e);
+        ed.style.cursor = hover ? (hover.type==='col'?'col-resize':'row-resize') : '';
+    });
+    ed.addEventListener('mousedown', e=>{
+        if(!hover||e.button!==0) return;
+        e.preventDefault();
+        const t=hover.table;
+        if(hover.type==='col'){
+            ensureFixedColgroup(t);
+            drag={type:'col',table:t,idx:hover.idx,x:e.clientX,w:readColWidths(t),tw:t.getBoundingClientRect().width};
+            document.body.classList.add('tbl-resizing');
+        } else {
+            const cells=Array.from(hover.row.cells);
+            drag={type:'row',row:hover.row,y:e.clientY,h:hover.row.getBoundingClientRect().height};
+            document.body.classList.add('tbl-resizing-row');
+        }
+    });
+    window.addEventListener('mousemove', e=>{
+        if(!drag) return;
+        if(drag.type==='col'){
+            const d=(e.clientX-drag.x)/drag.tw*100, w=drag.w.slice(), i=drag.idx;
+            const min=4; let a=w[i]+d, b=w[i+1]-d;
+            if(a<min){b-= (min-a); a=min;} if(b<min){a-=(min-b); b=min;}
+            w[i]=a; w[i+1]=b; writeColWidths(drag.table,w);
+        } else {
+            const h=Math.max(18, Math.round(drag.h+(e.clientY-drag.y)));
+            drag.row.style.height=h+'px';
+            Array.from(drag.row.cells).forEach(c=>{c.style.height=h+'px';});
+        }
+        positionBlockBar();
+    });
+    window.addEventListener('mouseup', ()=>{
+        if(!drag) return;
+        drag=null; document.body.classList.remove('tbl-resizing','tbl-resizing-row');
+        triggerSave(); updatePageMarkersSoon(); syncTfColWidth();
+    });
+})();
+function normalizeAllTablesInEditor(editor){
+    if(!editor) return;
+    editor.querySelectorAll('table').forEach(t=>{t.style.tableLayout='fixed'; if(!t.style.width)t.style.width='100%'; ensureFixedColgroup(t);});
+}
+
+/* Limpieza y exportación */
+function cleanDocument(){
+    const ed=ensureActiveEditor(); if(!ed) return;
+    if(!confirm('¿Limpiar formato del documento?')) return;
+    ed.querySelectorAll('font').forEach(f=>{const span=document.createElement('span'); span.innerHTML=f.innerHTML; f.replaceWith(span);});
+    ed.querySelectorAll('*').forEach(el=>{
+        const tag=el.tagName;
+        if(tag==='DIV' && el.classList.contains('manual-page-break')) return;
+        if(el.closest('.doc-lines')) return;
+        el.removeAttribute('class'); el.removeAttribute('id');
+        if(tag==='IMG'){
+            const w=el.style.width||''; el.removeAttribute('style'); el.style.maxWidth='100%'; el.style.height='auto'; el.style.display='block'; el.style.margin='10px 0'; if(w)el.style.width=w;
+        }else if(tag==='TABLE'){el.removeAttribute('style'); el.style.width='100%'; el.style.borderCollapse='collapse'; el.style.margin='10px 0'; el.style.tableLayout='fixed';}
+        else if(tag==='TD'||tag==='TH'){el.removeAttribute('style'); el.style.border='1px solid #000'; el.style.padding='8px'; el.style.verticalAlign='top'; el.style.overflowWrap='anywhere'; el.style.wordBreak='break-word';}
+    });
+    normalizeAllTablesInEditor(ed); triggerSave(); updatePageMarkersSoon();
+}
+function exportCleanHTML(){
+    const state=collectState();
+    const title=escapeHTML(state.title);
+    const m=state.margins || margins;
+    const out=`<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><title>${title}</title><link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;800&display=swap" rel="stylesheet"><style>@page{size:A4;margin:${m.top}cm ${m.right}cm ${m.bottom}cm ${m.left}cm}*{-webkit-print-color-adjust:exact;print-color-adjust:exact}body{font-family:'Nunito',Arial,sans-serif;background:#eee;margin:0;padding:20px}.content{width:210mm;min-height:297mm;background:white;margin:0 auto;padding:${m.top}cm ${m.right}cm ${m.bottom}cm ${m.left}cm;box-shadow:0 4px 14px rgba(0,0,0,.18)}.content img{max-width:100%;height:auto}.content table{border-collapse:collapse;width:100%;table-layout:fixed}.content td,.content th{border:1px solid #000;padding:8px;overflow-wrap:anywhere;word-break:break-word}.manual-page-break{break-after:page;page-break-after:always;height:0;border-top:2px dashed #1976D2;margin:18px 0}.manual-page-break:after{content:'Salto de página';font-size:12px;color:#01579B}@media print{body{background:white;padding:0}.content{width:auto;min-height:auto;box-shadow:none;margin:0;padding:0}.manual-page-break{border:0!important;margin:0!important}.manual-page-break:after{display:none}}</style></head><body><main class="content">${contentWithImagePaths('../images/', true)}</main></body></html>`;
+    Instalacion.savePublish(state.filename.replace(/\.json$/i,'.html'), out);
+}
+
+/* Utilidades */
+function escapeHTML(v){return String(v??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]))}
+function escapeAttr(v){return escapeHTML(v).replace(/"/g,'&quot;')}
+function jsEscape(v){return String(v??'').replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/\n/g,' ')}
+</script>
+</body>
+</html>

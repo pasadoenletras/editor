@@ -1,0 +1,25 @@
+# Cada vez que subís o borrás imágenes en images/, se actualiza images/lista.json
+# (la galería lo usa para saber qué imágenes hay publicadas).
+name: Lista de imágenes
+on:
+  push:
+    branches: [main, master]
+    paths: ['images/**']
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  lista:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Generar images/lista.json
+        run: |
+          cd images
+          ls -1 | grep -i -E '\.(png|jpe?g|gif|webp|svg|bmp|avif)$' | sort | python3 -c "import sys,json; print(json.dumps([l.strip() for l in sys.stdin if l.strip()], ensure_ascii=False, indent=1))" > lista.json
+      - name: Guardar si cambió
+        run: |
+          git config user.name "github-actions"
+          git config user.email "actions@users.noreply.github.com"
+          git add images/lista.json
+          git diff --cached --quiet || (git commit -m "Actualizar lista de imágenes" && git push)

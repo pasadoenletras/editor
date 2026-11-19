@@ -1,0 +1,1816 @@
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Constructor de Fichas Escolares v13 - instalación local</title>
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    
+    <script src="../instalacion.js"></script>
+
+    <style>
+        :root {
+            --preview-bg: #F5F7FA; --preview-header: #455A64; --preview-title: #263238;
+            --primary: #2196F3; --surface: #FFFFFF; --border: #CFD8DC;
+        }
+
+        body {
+            font-family: 'Nunito', sans-serif; background-color: var(--preview-bg);
+            margin: 0; padding: 20px; padding-bottom: 150px; transition: background-color 0.3s ease;
+        }
+
+        /* --- CONFIGURACIÓN --- */
+        .config-bar {
+            background: var(--surface); padding: 20px; border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1); max-width: 900px; margin: 0 auto 20px auto;
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px; align-items: end; border-top: 5px solid var(--preview-header);
+        }
+        .input-group label { display: block; font-weight: bold; margin-bottom: 5px; color: #546E7A; font-size: 0.9rem;}
+        .input-group input[type="text"], .input-group select {
+            width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: 6px; font-size: 0.95rem; box-sizing: border-box;
+        }
+        .checkbox-group { display: flex; align-items: center; gap: 10px; height: 100%; padding-bottom: 12px; }
+        .checkbox-group input { width: 20px; height: 20px; cursor: pointer; }
+        .checkbox-group label { margin: 0; cursor: pointer; font-weight: bold; color: #546E7A; }
+
+        /* --- VISTA PREVIA DEL ENCABEZADO --- */
+        #hero-preview {
+            max-width: 900px; margin: 0 auto 30px auto; background: white; padding: 20px;
+            border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); border-top: 4px solid var(--preview-header);
+            text-align: center;
+        }
+
+        /* --- TOOLBAR --- */
+        .toolbar {
+            position: sticky; top: 10px; background: #263238; color: white;
+            padding: 10px; border-radius: 8px; max-width: 900px; margin: 0 auto 20px auto;
+            display: flex; flex-wrap: wrap; gap: 8px; z-index: 100;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2); justify-content: center; align-items: center;
+        }
+        .tool-group { display: flex; gap: 2px; background: rgba(255,255,255,0.1); border-radius: 4px; padding: 2px; }
+        .tool-btn {
+            background: transparent; border: none; color: white; padding: 6px 10px;
+            border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 0.9rem;
+        }
+        .tool-btn:hover { background: rgba(255,255,255,0.2); }
+        .tool-select { background: rgba(255,255,255,0.9); border: none; padding: 6px; border-radius: 4px; font-weight: bold; cursor: pointer; max-width: 150px; }
+
+        /* --- POPUPS EMOJIS / COLORES --- */
+        .popup-wrapper { position: relative; display: inline-block; }
+        .popup-menu {
+            display: none; position: absolute; top: 110%; left: 50%; transform: translateX(-50%);
+            background: white; border: 1px solid #ccc; border-radius: 8px; padding: 15px;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.2); width: 320px; z-index: 200; max-height: 300px; overflow-y: auto; text-align: left;
+        }
+        .popup-category-title { font-size: 0.85rem; color: #78909C; font-weight: bold; margin: 10px 0 5px 0; border-bottom: 1px solid #eee; }
+        .emoji-grid { display: grid; gap: 5px; grid-template-columns: repeat(8, 1fr); }
+        .color-grid { display: grid; gap: 5px; grid-template-columns: repeat(5, 1fr); }
+        .emoji-btn { background: none; border: none; font-size: 1.4rem; cursor: pointer; padding: 4px; }
+        .emoji-btn:hover { transform: scale(1.2); background: #f0f0f0; border-radius: 4px; }
+        .color-btn { width: 30px; height: 30px; border-radius: 50%; border: 1px solid #ddd; cursor: pointer; }
+        .color-btn:hover { transform: scale(1.1); }
+
+        /* --- GALERÍA DE IMÁGENES / MASCOTAS --- */
+        .gallery-modal-overlay {
+            display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.72);
+            z-index: 3000; align-items: center; justify-content: center; padding: 20px;
+        }
+        .gallery-modal {
+            background: white; color: #263238; width: min(760px, 96vw); max-height: 90vh;
+            border-radius: 14px; box-shadow: 0 18px 60px rgba(0,0,0,0.35); overflow: hidden;
+        }
+        .gallery-modal-header { background: #263238; color: white; padding: 14px 18px; display: flex; justify-content: space-between; align-items: center; }
+        .gallery-modal-header h3 { margin: 0; font-size: 1.05rem; }
+        .gallery-modal-body { padding: 18px; max-height: 68vh; overflow-y: auto; }
+        .gallery-actions-row { display: grid; grid-template-columns: 1fr auto; gap: 10px; align-items: end; margin-bottom: 14px; }
+        .gallery-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(125px, 1fr)); gap: 12px; margin-top: 12px; }
+        .gallery-item {
+            border: 1px solid #CFD8DC; border-radius: 10px; padding: 10px; background: #FAFAFA;
+            cursor: pointer; text-align: center; transition: 0.18s ease;
+        }
+        .gallery-item:hover { transform: translateY(-2px); border-color: var(--primary); box-shadow: 0 4px 14px rgba(0,0,0,0.12); }
+        .gallery-item img { height: 82px; width: 100%; object-fit: contain; display: block; margin-bottom: 7px; }
+        .gallery-item span { font-size: 0.76rem; color: #546E7A; word-break: break-word; }
+        .gallery-status { font-size: 0.86rem; color: #607D8B; background: #F5F7FA; border-radius: 8px; padding: 8px 10px; }
+        .mascot-name-label { font-size: 0.75rem; color: #546E7A; margin-top: 4px; min-height: 18px; }
+        .cloud-list { display: grid; gap: 10px; margin-top: 12px; }
+        .cloud-item { border: 1px solid #CFD8DC; border-radius: 10px; padding: 10px; background: #FAFAFA; display: grid; grid-template-columns: 1fr auto auto; gap: 8px; align-items: center; }
+        .cloud-item strong { color: #263238; word-break: break-word; }
+        .cloud-item small { color: #78909C; display: block; margin-top: 2px; }
+        .cloud-empty { color: #607D8B; background: #F5F7FA; border-radius: 8px; padding: 12px; }
+
+        .table-options-grid { display:grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin-top: 12px; }
+        .table-options-grid .input-group { margin: 0; }
+        .table-options-grid input[type="number"], .table-options-grid select, .table-options-grid input[type="color"] {
+            width: 100%; padding: 8px; border: 1px solid #CFD8DC; border-radius: 8px; background: #fff; min-height: 38px;
+        }
+        .table-checks { display:grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin: 12px 0; color:#37474F; }
+        .table-checks label { display:flex; align-items:center; gap:6px; font-weight:700; background:#F5F7FA; padding:8px; border-radius:8px; }
+        .table-modal-actions { display:flex; justify-content:flex-end; flex-wrap:wrap; gap:10px; margin-top:16px; }
+        @media (max-width: 560px) {
+            .table-options-grid, .table-checks { grid-template-columns: 1fr; }
+        }
+
+        #image-resize-handle {
+            display: none; position: absolute; width: 18px; height: 18px; border-radius: 50%;
+            background: var(--primary); border: 3px solid white; box-shadow: 0 3px 10px rgba(0,0,0,0.35);
+            z-index: 700; cursor: nwse-resize; touch-action: none;
+        }
+        #image-resize-label {
+            display: none; position: absolute; background: #263238; color: white; font-size: 0.78rem;
+            padding: 4px 8px; border-radius: 999px; box-shadow: 0 3px 10px rgba(0,0,0,0.2);
+            z-index: 699; pointer-events: none; white-space: nowrap;
+        }
+        .selected-image { outline: 3px solid var(--primary); box-shadow: 0 0 10px rgba(33, 150, 243, 0.5); }
+        #img-upload-input, #import-file-input { display: none; }
+
+        /* --- EDITOR INTRODUCCIÓN --- */
+        #intro-container { max-width: 900px; margin: 0 auto 20px auto; display: none; }
+        .intro-editor { background: rgba(255, 255, 255, 0.5); border: 2px dashed #90A4AE; border-radius: 8px; padding: 20px; min-height: 60px; outline: none; }
+        .intro-editor:focus { background: white; border-color: var(--primary); }
+        .intro-label { font-size: 0.9rem; color: #78909C; margin-bottom: 5px; font-weight: bold; display: block; }
+
+        /* --- TARJETAS --- */
+        #cards-container { max-width: 900px; margin: 0 auto; }
+        .editor-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; margin-bottom: 25px; overflow: hidden; box-shadow: 0 2px 5px rgba(0,0,0,0.05); transition: border-top 0.2s; }
+        .card-header-area { background-color: var(--preview-header); padding: 15px; display: flex; align-items: center; gap: 10px; }
+        .card-header-input { font-size: 1.1rem; font-weight: bold; color: white; background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.3); border-radius: 4px; width: 100%; padding: 8px; outline: none; }
+        .card-header-input::placeholder { color: rgba(255,255,255,0.7); }
+        .card-options-area { display:flex; flex-wrap:wrap; gap:10px 14px; align-items:center; padding:10px 20px; background:#F5F7FA; border-bottom:1px solid var(--border); color:#546E7A; font-size:0.86rem; }
+        .card-options-area label { display:flex; align-items:center; gap:6px; font-weight:700; cursor:pointer; }
+        .card-options-area input { width:16px; height:16px; cursor:pointer; }
+
+        .drag-handle { color: white; font-size: 1.5rem; cursor: grab; padding: 0 10px; opacity: 0.7; transition: opacity 0.2s; user-select: none; }
+        .drag-handle:hover { opacity: 1; }
+        .drag-handle:active { cursor: grabbing; }
+
+        .btn-delete { background: #FF5252; color: white; border: none; width: 32px; height: 32px; border-radius: 50%; cursor: pointer; font-weight: bold; flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
+        
+        .card-content-area { padding: 20px; }
+        .card-content-editor { min-height: 100px; border: 1px dashed #B0BEC5; padding: 15px; border-radius: 4px; background: #FAFAFA; outline: none; }
+        .card-content-editor:focus { background: white; border-color: var(--primary); }
+        .card-content-editor img, .intro-editor img { max-width: 100%; border: 1px solid #ccc; cursor: pointer; }
+        .card-content-editor table, .intro-editor table { width: 100%; border-collapse: collapse; margin: 10px 0; table-layout: fixed; }
+        .card-content-editor td, .card-content-editor th, .intro-editor td { border: 1px solid #999; padding: 5px; min-height: 20px; }
+
+        /* --- MENÚ DE ACCIONES POR CLIC --- */
+        .fab-container { position: fixed; bottom: 24px; right: 24px; z-index: 1000; display: flex; flex-direction: column-reverse; align-items: flex-end; gap: 12px; }
+        .fab-main { width: 60px; height: 60px; border-radius: 50%; background: var(--primary); color: white; border: none; font-size: 28px; box-shadow: 0 4px 12px rgba(0,0,0,0.3); cursor: pointer; transition: transform 0.2s ease, background 0.2s ease; display: flex; justify-content: center; align-items: center; }
+        .fab-container.menu-open .fab-main { transform: rotate(45deg); background: #1976D2; }
+
+        .fab-menu {
+            display: none; width: min(420px, calc(100vw - 36px)); max-height: min(72vh, 640px); overflow-y: auto;
+            background: #FFFFFF; border: 1px solid #CFD8DC; border-radius: 16px; padding: 14px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.28); color: #263238;
+        }
+        .fab-container.menu-open .fab-menu { display: block; }
+        .fab-menu-header { display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:10px; border-bottom:1px solid #ECEFF1; padding-bottom:8px; }
+        .fab-menu-header strong { font-size: 1rem; color:#263238; }
+        .fab-close { background:#ECEFF1; color:#263238; border:none; border-radius:999px; width:34px; height:34px; cursor:pointer; font-weight:900; }
+        .fab-section { margin-top: 10px; }
+        .fab-section-title { font-size: 0.78rem; text-transform: uppercase; letter-spacing: .04em; color:#78909C; font-weight:900; margin: 8px 0 6px 2px; }
+        .fab-section-grid { display:grid; grid-template-columns: 1fr 1fr; gap:8px; }
+        .btn-action { padding: 10px 12px; border-radius: 12px; border: none; cursor: pointer; font-weight: bold; font-size: 0.88rem; color: white; box-shadow: 0 3px 8px rgba(0,0,0,0.18); display: flex; align-items: center; justify-content:center; gap: 8px; transition: transform 0.2s; min-height: 42px; text-align:center; }
+        .btn-action:hover { transform: translateY(-1px); }
+        .btn-action.danger { grid-column: 1 / -1; }
+        @media (max-width: 520px) {
+            .fab-container { bottom: 16px; right: 16px; }
+            .fab-section-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body style="opacity: 0; transition: opacity 0.3s ease-in;">
+
+    <div id="app-wrapper">
+        <div class="config-bar">
+            <div id="inst-status" style="grid-column: 1 / -1;"></div>
+            <div class="input-group">
+                <label>Título de la Ficha</label>
+                <input type="text" id="app-title" value="Mis Actividades" placeholder="Ej: Cuento El Almohadón" oninput="saveState(); renderHeroPreview();">
+            </div>
+            <div class="input-group">
+                <label>Nombre de archivo (JSON y HTML)</label>
+                <input type="text" id="cloud-json-filename" value="borrador_fichas.json" placeholder="borrador_fichas.json" oninput="saveState()">
+            </div>
+            <div class="input-group">
+                <label>Estilo Visual</label>
+                <select id="app-theme" onchange="applyThemePreview(); saveState()">
+                    <option value="lengua">Lengua (Verde)</option>
+                    <option value="matematica">Matemática (Naranja)</option>
+                    <option value="recursos">Recursos (Azul)</option>
+                    <option value="diseno">Diseño (Rojo)</option>
+                    <option value="celeste">Celeste</option>
+                    <option value="turquesa">Turquesa</option>
+                    <option value="violeta">Violeta</option>
+                    <option value="lila">Lila</option>
+                    <option value="fucsia">Fucsia</option>
+                    <option value="indigo">Índigo</option>
+                    <option value="lima">Lima</option>
+                    <option value="amarillo">Amarillo</option>
+                    <option value="coral">Coral</option>
+                    <option value="marron">Marrón</option>
+                    <option value="gris">Gris</option>
+                </select>
+            </div>
+            <div class="input-group">
+                <label>Barra de Navegación</label>
+                <select id="app-navbar" onchange="toggleVolverInput(); saveState()">
+                    <option value="4materias">Las 4 Materias</option>
+                    <option value="volver">Lengua, Mate y "Volver a..."</option>
+                    <option value="none">Ninguna</option>
+                </select>
+            </div>
+            <div class="input-group">
+                <label>Ubicación de la página final</label>
+                <select id="app-output-location" onchange="saveState()">
+                    <option value="subfolder">En subcarpeta</option>
+                    <option value="root">En raíz</option>
+                </select>
+            </div>
+            <div class="input-group" id="volver-text-group" style="display: none;">
+                <label>Texto botón 'Volver'</label>
+                <input type="text" id="volver-text" value="Textos" oninput="saveState()">
+            </div>
+            <div class="input-group">
+                <label>Diseño de Portada</label>
+                <select id="hero-layout" onchange="toggleMascotButtons(); saveState(); renderHeroPreview();">
+                    <option value="center">Solo Texto</option>
+                    <option value="img-left">Mascota a la Izquierda</option>
+                    <option value="img-right">Mascota a la Derecha</option>
+                    <option value="img-both">Mascota a Ambos Lados</option>
+                    <option value="img-top">Mascota Arriba</option>
+                </select>
+            </div>
+            <div class="input-group" id="mascot-buttons-group" style="display: none;">
+                <label>Mascotas desde /images/</label>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 5px;">
+                    <button class="tool-btn" style="background:#27ae60; color:white;" id="btn-galeria-mascota1" onclick="openMascotaGallery(1)">🖼️ Galería M1</button>
+                    <button class="tool-btn" style="background:#2e7d32; color:white;" id="btn-subir-mascota1" onclick="document.getElementById('mascota1-upload').click()">⬆️ Subir M1</button>
+                    <button class="tool-btn" style="background:#9b59b6; color:white; display:none;" id="btn-galeria-mascota2" onclick="openMascotaGallery(2)">🖼️ Galería M2</button>
+                    <button class="tool-btn" style="background:#6a1b9a; color:white; display:none;" id="btn-subir-mascota2" onclick="document.getElementById('mascota2-upload').click()">⬆️ Subir M2</button>
+                </div>
+                <div class="mascot-name-label" id="mascota1-label">Mascota 1: ninguna</div>
+                <div class="mascot-name-label" id="mascota2-label" style="display:none;">Mascota 2: ninguna</div>
+                <div style="font-size:0.75rem; color:#e74c3c; margin-top:5px; cursor:pointer; text-align:right; font-weight:bold;" onclick="clearMascotas()">🗑️ Quitar mascotas</div>
+            </div>
+            
+            <input type="file" id="mascota1-upload" accept="image/png,image/jpeg,image/jpg,image/gif,image/webp" style="display:none;" onchange="uploadMascotaToImages(this, 1)">
+            <input type="file" id="mascota2-upload" accept="image/png,image/jpeg,image/jpg,image/gif,image/webp" style="display:none;" onchange="uploadMascotaToImages(this, 2)">
+
+            <div class="checkbox-group">
+                <input type="checkbox" id="show-intro" onchange="toggleIntro(); saveState()">
+                <label for="show-intro">Mostrar Intro/Consigna</label>
+            </div>
+        </div>
+
+        <div id="hero-preview"></div>
+
+        <div class="toolbar">
+            <select class="tool-select" onchange="formatDoc('formatBlock', this.value); this.value='p';">
+                <option value="p">Formato...</option>
+                <option value="p">Párrafo Normal</option>
+                <option value="h1">H1 - Título Principal</option>
+                <option value="h2">H2 - Subtítulo</option>
+            </select>
+            <div class="tool-group">
+                <button class="tool-btn" onclick="formatDoc('bold')" title="Negrita"><b>B</b></button>
+                <button class="tool-btn" onclick="formatDoc('italic')" title="Cursiva"><i>I</i></button>
+                <button class="tool-btn" onclick="formatDoc('underline')" title="Subrayado"><u>S</u></button>
+                <button class="tool-btn" onclick="formatDoc('insertUnorderedList')" title="Lista">📝</button>
+            </div>
+            <button class="tool-btn" onclick="createCustomLink()" title="Insertar Enlace Inteligente">🔗</button>
+            <div class="tool-group">
+                <button class="tool-btn" onclick="formatDoc('justifyLeft')">⬅️</button>
+                <button class="tool-btn" onclick="formatDoc('justifyCenter')">↔️</button>
+                <button class="tool-btn" onclick="formatDoc('justifyRight')">➡️</button>
+            </div>
+            <div class="popup-wrapper">
+                <button class="tool-btn" onmousedown="event.preventDefault(); togglePopup('color-picker')" style="border-bottom: 3px solid red;">A🌈</button>
+                <div id="color-picker" class="popup-menu" style="width: 250px;">
+                    <div class="popup-category-title">Básicos</div>
+                    <div class="color-grid">
+                        <div class="color-btn" style="background:#000000" onmousedown="event.preventDefault(); formatDoc('foreColor', '#000000')"></div>
+                        <div class="color-btn" style="background:#D32F2F" onmousedown="event.preventDefault(); formatDoc('foreColor', '#D32F2F')"></div>
+                        <div class="color-btn" style="background:#1976D2" onmousedown="event.preventDefault(); formatDoc('foreColor', '#1976D2')"></div>
+                        <div class="color-btn" style="background:#388E3C" onmousedown="event.preventDefault(); formatDoc('foreColor', '#388E3C')"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="tool-group" style="border-left: 1px solid rgba(255,255,255,0.3); padding-left: 8px;">
+                <button class="tool-btn" onclick="openTableModal('insert')" title="Crear tabla">📅 Tabla</button>
+                <button class="tool-btn" onclick="openTableModal('format')" title="Aplicar formato a la tabla seleccionada">🎨</button>
+                <button class="tool-btn" onclick="tableAction('addRow')" title="Agregar fila">+Fila</button>
+                <button class="tool-btn" onclick="tableAction('deleteRow')" title="Borrar fila">-Fila</button>
+                <button class="tool-btn" onclick="tableAction('addCol')" title="Agregar columna">+Col</button>
+                <button class="tool-btn" onclick="tableAction('deleteCol')" title="Borrar columna">-Col</button>
+                <button class="tool-btn" onclick="tableAction('cycleGray')" title="Cambiar gris de celda">⬛</button>
+                <button class="tool-btn" onclick="tableAction('deleteTable')" title="Borrar tabla">🗑️</button>
+            </div>
+            <div class="popup-wrapper">
+                <button class="tool-btn" onmousedown="event.preventDefault(); togglePopup('emoji-picker')" style="background: #FFCA28; color: #333;">😀</button>
+                <div id="emoji-picker" class="popup-menu">
+                    <div class="popup-category-title">Caras y Gestos</div>
+                    <div class="emoji-grid">
+                        <button class="emoji-btn" onmousedown="event.preventDefault(); insertEmoji('😀')">😀</button>
+                        <button class="emoji-btn" onmousedown="event.preventDefault(); insertEmoji('😉')">😉</button>
+                        <button class="emoji-btn" onmousedown="event.preventDefault(); insertEmoji('🤓')">🤓</button>
+                        <button class="emoji-btn" onmousedown="event.preventDefault(); insertEmoji('😌')">😌</button>
+                        <button class="emoji-btn" onmousedown="event.preventDefault(); insertEmoji('🫣')">🫣</button>
+                        <button class="emoji-btn" onmousedown="event.preventDefault(); insertEmoji('😎')">😎</button>
+                        <button class="emoji-btn" onmousedown="event.preventDefault(); insertEmoji('🤔')">🤔</button>
+                        <button class="emoji-btn" onmousedown="event.preventDefault(); insertEmoji('😮')">😮</button>
+                    </div>
+                    
+                    <div class="popup-category-title">Animales y Naturaleza</div>
+                    <div class="emoji-grid">
+                        <button class="emoji-btn" onmousedown="event.preventDefault(); insertEmoji('🐧')">🐧</button>
+                        <button class="emoji-btn" onmousedown="event.preventDefault(); insertEmoji('🐥')">🐥</button>
+                        <button class="emoji-btn" onmousedown="event.preventDefault(); insertEmoji('🐢')">🐢</button>
+                        <button class="emoji-btn" onmousedown="event.preventDefault(); insertEmoji('🐶')">🐶</button>
+                        <button class="emoji-btn" onmousedown="event.preventDefault(); insertEmoji('🐱')">🐱</button>
+                        <button class="emoji-btn" onmousedown="event.preventDefault(); insertEmoji('🦁')">🦁</button>
+                        <button class="emoji-btn" onmousedown="event.preventDefault(); insertEmoji('🐝')">🐝</button>
+                        <button class="emoji-btn" onmousedown="event.preventDefault(); insertEmoji('🌳')">🌳</button>
+                    </div>
+
+                    <div class="popup-category-title">Matemática</div>
+                    <div class="emoji-grid">
+                        <button class="emoji-btn" onmousedown="event.preventDefault(); insertEmoji('➕')">➕</button>
+                        <button class="emoji-btn" onmousedown="event.preventDefault(); insertEmoji('➖')">➖</button>
+                        <button class="emoji-btn" onmousedown="event.preventDefault(); insertEmoji('✖️')">✖️</button>
+                        <button class="emoji-btn" onmousedown="event.preventDefault(); insertEmoji('➗')">➗</button>
+                        <button class="emoji-btn" onmousedown="event.preventDefault(); insertEmoji('🟰')">🟰</button>
+                        <button class="emoji-btn" onmousedown="event.preventDefault(); insertEmoji('📐')">📐</button>
+                        <button class="emoji-btn" onmousedown="event.preventDefault(); insertEmoji('📏')">📏</button>
+                        <button class="emoji-btn" onmousedown="event.preventDefault(); insertEmoji('🔢')">🔢</button>
+                        <button class="emoji-btn" onmousedown="event.preventDefault(); insertEmoji('🎲')">🎲</button>
+                        <button class="emoji-btn" onmousedown="event.preventDefault(); insertEmoji('🔴')">🔴</button>
+                        <button class="emoji-btn" onmousedown="event.preventDefault(); insertEmoji('🟠')">🟠</button>
+                        <button class="emoji-btn" onmousedown="event.preventDefault(); insertEmoji('🟡')">🟡</button>
+                        <button class="emoji-btn" onmousedown="event.preventDefault(); insertEmoji('🟢')">🟢</button>
+                        <button class="emoji-btn" onmousedown="event.preventDefault(); insertEmoji('🔵')">🔵</button>
+                        <button class="emoji-btn" onmousedown="event.preventDefault(); insertEmoji('🟣')">🟣</button>
+                        <button class="emoji-btn" onmousedown="event.preventDefault(); insertEmoji('🟤')">🟤</button>
+                        <button class="emoji-btn" onmousedown="event.preventDefault(); insertEmoji('⚫')">⚫</button>
+                        <button class="emoji-btn" onmousedown="event.preventDefault(); insertEmoji('⚪')">⚪</button>
+                        <button class="emoji-btn" onmousedown="event.preventDefault(); insertEmoji('🟥')">🟥</button>
+                    </div>
+
+                    <div class="popup-category-title">Escuela y Corrección</div>
+                    <div class="emoji-grid">
+                        <button class="emoji-btn" onmousedown="event.preventDefault(); insertEmoji('📝')">📝</button>
+                        <button class="emoji-btn" onmousedown="event.preventDefault(); insertEmoji('📚')">📚</button>
+                        <button class="emoji-btn" onmousedown="event.preventDefault(); insertEmoji('✏️')">✏️</button>
+                        <button class="emoji-btn" onmousedown="event.preventDefault(); insertEmoji('✅')">✅</button>
+                        <button class="emoji-btn" onmousedown="event.preventDefault(); insertEmoji('❌')">❌</button>
+                        <button class="emoji-btn" onmousedown="event.preventDefault(); insertEmoji('⚠️')">⚠️</button>
+                        <button class="emoji-btn" onmousedown="event.preventDefault(); insertEmoji('⭐')">⭐</button>
+                        <button class="emoji-btn" onmousedown="event.preventDefault(); insertEmoji('💡')">💡</button>
+                    </div>
+                </div>
+            </div>
+            <button class="tool-btn" onmousedown="event.preventDefault(); openEditorImageGallery()" style="background: #FF7043;">📷</button>
+            <input type="file" id="img-upload-input" accept="image/*" onchange="handleImageUpload(this)">
+        </div>
+
+        <div id="image-resize-label">Arrastrá para cambiar tamaño</div>
+        <div id="image-resize-handle" title="Arrastrar para agrandar o achicar"></div>
+
+        <div id="table-modal" class="gallery-modal-overlay">
+            <div class="gallery-modal">
+                <div class="gallery-modal-header">
+                    <h3 id="table-modal-title">Insertar tabla</h3>
+                    <button class="tool-btn" style="background:#546E7A; color:white;" onclick="closeTableModal()">✕</button>
+                </div>
+                <div class="gallery-modal-body">
+                    <div class="gallery-status" id="table-modal-help">Elegí la estructura y el estilo inicial de la tabla.</div>
+
+                    <div class="table-options-grid">
+                        <div class="input-group" id="table-rows-group">
+                            <label>Filas</label>
+                            <input type="number" id="table-rows" min="1" max="30" value="3">
+                        </div>
+                        <div class="input-group" id="table-cols-group">
+                            <label>Columnas</label>
+                            <input type="number" id="table-cols" min="1" max="12" value="3">
+                        </div>
+                        <div class="input-group">
+                            <label>Ancho de tabla</label>
+                            <select id="table-width">
+                                <option value="100%">100%</option>
+                                <option value="75%">75%</option>
+                                <option value="50%">50%</option>
+                                <option value="auto">Automático</option>
+                            </select>
+                        </div>
+                        <div class="input-group">
+                            <label>Alineación del texto</label>
+                            <select id="table-align">
+                                <option value="left">Izquierda</option>
+                                <option value="center">Centro</option>
+                                <option value="right">Derecha</option>
+                            </select>
+                        </div>
+                        <div class="input-group">
+                            <label>Borde</label>
+                            <select id="table-border-width">
+                                <option value="1">Fino</option>
+                                <option value="2">Medio</option>
+                                <option value="3">Grueso</option>
+                                <option value="0">Sin bordes</option>
+                            </select>
+                        </div>
+                        <div class="input-group">
+                            <label>Color de borde</label>
+                            <input type="color" id="table-border-color" value="#999999">
+                        </div>
+                        <div class="input-group">
+                            <label>Fondo encabezado</label>
+                            <input type="color" id="table-header-bg" value="#eeeeee">
+                        </div>
+                        <div class="input-group">
+                            <label>Espaciado interno</label>
+                            <select id="table-padding">
+                                <option value="5">Chico</option>
+                                <option value="8">Medio</option>
+                                <option value="12">Grande</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="table-checks">
+                        <label id="table-header-row-label"><input type="checkbox" id="table-header-row"> Primera fila como encabezado</label>
+                        <label id="table-header-col-label"><input type="checkbox" id="table-header-col"> Primera columna como encabezado</label>
+                    </div>
+
+                    <div class="table-modal-actions">
+                        <button class="tool-btn" style="background:#607D8B; color:white;" onclick="closeTableModal()">Cancelar</button>
+                        <button class="tool-btn" style="background:#1976D2; color:white;" id="table-apply-btn" onclick="applyTableModal()">Insertar tabla</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="intro-container">
+            <label class="intro-label">Introducción / Encabezado (Opcional)</label>
+            <div class="intro-editor" id="intro-editor" contenteditable="true" placeholder="Escribe aquí instrucciones..." oninput="saveState()"></div>
+        </div>
+
+        <div id="cards-container"></div>
+
+        <div class="fab-container" id="actions-menu">
+            <button class="fab-main" onclick="toggleActionsMenu(event)" title="Abrir menú de acciones">🛠️</button>
+            <div class="fab-menu">
+                <div class="fab-menu-header">
+                    <strong>Acciones del constructor</strong>
+                    <button class="fab-close" onclick="closeActionsMenu()" title="Cerrar">×</button>
+                </div>
+
+                <div class="fab-section">
+                    <div class="fab-section-title">Fichas</div>
+                    <div class="fab-section-grid">
+                        <button class="btn-action" style="background: #4CAF50;" onclick="addNewCard()">➕ Agregar Ficha</button>
+                        <button class="btn-action danger" style="background: #F44336; font-size: 0.85rem;" onclick="resetProject()">🗑️ Nuevo Proyecto</button>
+                    </div>
+                </div>
+
+                <div class="fab-section">
+                    <div class="fab-section-title">Guardar y abrir</div>
+                    <div class="fab-section-grid">
+                        <button class="btn-action" style="background: #00695C;" onclick="downloadProjectJSON()" title="Guarda el JSON en borradores/fichas/">💾 Guardar JSON</button>
+                        <button class="btn-action" style="background: #3949AB;" onclick="openDraftsLocal()">📂 Abrir borrador</button>
+                    </div>
+                </div>
+
+                <div class="fab-section">
+                    <div class="fab-section-title">Exportar y revisar</div>
+                    <div class="fab-section-grid">
+                        <button class="btn-action" style="background: #7E57C2;" onclick="previewWebApp()">👁️ Previsualizar</button>
+                        <button class="btn-action" style="background: #FF9800;" onclick="exportWebAppAsSingleHtml()" title="Guarda el HTML en publicar/">📄 Guardar HTML</button>
+                        <button class="btn-action" style="background: #8D6E63;" onclick="exportWebAppAsZip()">📦 ZIP</button>
+                        <button class="btn-action" style="background: #00897B;" onclick="showUsedImages()">🖼️ Imágenes usadas</button>
+                    </div>
+                </div>
+
+                <div class="fab-section">
+                    <div class="fab-section-title">Importar</div>
+                    <div class="fab-section-grid">
+                        <button class="btn-action" style="background: #0288D1;" onclick="importFromURL()">🌐 Traer de URL</button>
+                        <button class="btn-action" style="background: #607D8B;" onclick="triggerImport()">📂 HTML/JSON de otra ubicación</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <input type="file" id="import-file-input" accept=".html,.json,application/json,text/html" onchange="handleImport(this)">
+    </div>
+
+    <script>
+        // TEMAS ACTUALIZADOS
+        const themes = {
+            "lengua": { bg: "#E8F5E9", header: "#27AE60", title: "#1B5E20" },
+            "matematica": { bg: "#FFF3E0", header: "#E67E22", title: "#E65100" },
+            "recursos": { bg: "#E3F2FD", header: "#036FB0", title: "#01579B" },
+            "diseno": { bg: "#FFEBEE", header: "#D31718", title: "#B71C1C" },
+            "celeste": { bg: "#E1F5FE", header: "#039BE5", title: "#0277BD" },
+            "turquesa": { bg: "#E0F7FA", header: "#00ACC1", title: "#006064" },
+            "violeta": { bg: "#F3E5F5", header: "#7E57C2", title: "#4A148C" },
+            "lila": { bg: "#F8EAF6", header: "#AB47BC", title: "#6A1B9A" },
+            "fucsia": { bg: "#FCE4EC", header: "#D81B60", title: "#880E4F" },
+            "indigo": { bg: "#E8EAF6", header: "#3F51B5", title: "#1A237E" },
+            "lima": { bg: "#F1F8E9", header: "#7CB342", title: "#33691E" },
+            "amarillo": { bg: "#FFFDE7", header: "#F9A825", title: "#F57F17" },
+            "coral": { bg: "#FBE9E7", header: "#FF7043", title: "#BF360C" },
+            "marron": { bg: "#EFEBE9", header: "#795548", title: "#3E2723" },
+            "gris": { bg: "#ECEFF1", header: "#607D8B", title: "#263238" }
+        };
+
+        // VARIABLES PARA MASCOTAS / IMÁGENES POR RUTA
+        // Las mascotas nuevas se guardan como nombre de archivo dentro de /images/.
+        // Las imágenes antiguas en Base64 se siguen mostrando por compatibilidad.
+        const ROOT_IMAGES = '/images/';
+        let previewMode = false;
+        let heroImg1 = "";
+        let heroImg2 = "";
+        let selectedImage = null;
+        let activeMascotaSlot = 1;
+        let galleryContext = 'mascota';
+        let activeEditorElement = null;
+        let savedEditorRange = null;
+        let imageResizeState = null;
+        let tableModalMode = 'insert';
+
+        function encodeImagePath(filename) {
+            return String(filename || '').split('/').map(encodeURIComponent).join('/');
+        }
+        function siteImageSrc(value) {
+            const v = String(value || '').trim();
+            if (!v) return '';
+            if (/^(data:image|https?:\/\/|\/)/i.test(v)) return v;
+            return ROOT_IMAGES + encodeImagePath(v);
+        }
+        function imageNameFrom(value) {
+            let v = String(value || '').trim().replace(/[?#].*$/, '');
+            v = v.replace(/^(\.\.\/)*\/?images\//i, '').replace(/^.*[\\/]/, '');
+            try { return decodeURIComponent(v); } catch (e) { return v; }
+        }
+        function editorImageSrc(value) {
+            const v = String(value || '').trim();
+            if (!v) return '';
+            if (/^(data:image|https?:\/\/)/i.test(v)) return v;
+            return Instalacion.imageSrc(imageNameFrom(v));
+        }
+        function exportImageSrc(value) { return previewMode ? editorImageSrc(value) : siteImageSrc(value); }
+        function resolveImageSrc(value) { return editorImageSrc(value); }
+        function safeImageName(value) {
+            return String(value || '').trim().replace(/^.*[\\/]/, '');
+        }
+        // En el editor las imágenes se ven desde la carpeta de trabajo; en el JSON y en el HTML final
+        // quedan como /images/nombre.png (con data-img para poder reconocerlas).
+        function hydrateImagesHTML(html) {
+            const d = document.createElement('div'); d.innerHTML = html || '';
+            d.querySelectorAll('img').forEach(img => {
+                let name = img.getAttribute('data-img');
+                if (!name) {
+                    const s = img.getAttribute('src') || '';
+                    if (/^(\.\.\/)*\/?images\//i.test(s)) { name = imageNameFrom(s); img.setAttribute('data-img', name); }
+                }
+                if (name) img.setAttribute('src', editorImageSrc(name));
+            });
+            return d.innerHTML;
+        }
+        function normalizeImagesHTML(html) {
+            const d = document.createElement('div'); d.innerHTML = html || '';
+            d.querySelectorAll('img[data-img]').forEach(img => img.setAttribute('src', siteImageSrc(img.getAttribute('data-img'))));
+            return d.innerHTML;
+        }
+        function exportContentImages(html) {
+            const d = document.createElement('div'); d.innerHTML = html || '';
+            d.querySelectorAll('img[data-img]').forEach(img => img.setAttribute('src', exportImageSrc(img.getAttribute('data-img'))));
+            return d.innerHTML;
+        }
+        function rehydrateImages() {
+            document.querySelectorAll('.card-content-editor img[data-img], #intro-editor img[data-img]').forEach(img => img.setAttribute('src', editorImageSrc(img.getAttribute('data-img'))));
+        }
+
+        // BARRAS DE NAVEGACIÓN DINÁMICAS
+        function getOutputPrefix() {
+            const loc = document.getElementById('app-output-location')?.value || 'subfolder';
+            return loc === 'root' ? '' : '../';
+        }
+        function getEditorURLForExport() {
+            return getOutputPrefix() + 'editor.html';
+        }
+        function getNavbarHTML() {
+            // Las páginas ya no llevan la barra con los 4 enlaces: cargan /volver.js (logo chico + Volver inteligente).
+            return '';
+            const type = document.getElementById('app-navbar').value;
+            if (type === 'none') return '';
+            const prefix = getOutputPrefix();
+            const logoHref = prefix + 'index.html';
+            const logoSrc = prefix + 'logo.png';
+            const lenguaHref = prefix + 'lengua.html';
+            const mateHref = prefix + 'matematica.html';
+            const recursosHref = prefix + 'recursos.html';
+            const disenoHref = prefix + 'diseno.html';
+            let navBase = `<style>body{margin:0!important;padding:0!important;}</style><header style="background-color: #2c3e50; padding: 10px 0; font-family: 'Roboto', sans-serif; width: 100%; box-sizing: border-box; flex-shrink: 0; z-index: 1000; position: sticky; top: 0; box-shadow: 0 4px 10px rgba(0,0,0,0.3);"><nav style="max-width: 1100px; margin: 0 auto; padding: 0 20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap;"><a href="${logoHref}" style="text-decoration: none; display: flex; align-items: center;"><img src="${logoSrc}" alt="Recursos Educativos" style="height: 60px; width: auto; transition: transform 0.2s;"></a><div style="display: flex; gap: 20px; align-items: center; flex-wrap: wrap;">`;
+            if (type === '4materias') {
+                return navBase + `<a href="${lenguaHref}" style="color: white; text-decoration: none; font-size: 0.9rem;">Lengua</a><a href="${mateHref}" style="color: white; text-decoration: none; font-size: 0.9rem;">Matemática</a><a href="${recursosHref}" style="color: white; text-decoration: none; font-size: 0.9rem;">Recursos</a><a href="${disenoHref}" style="color: white; text-decoration: none; font-size: 0.9rem;">Diseño</a></div></nav></header>`;
+            } else if (type === 'volver') {
+                const volverText = document.getElementById('volver-text').value || "Textos";
+                return navBase + `<a href="${lenguaHref}" style="color: white; text-decoration: none; font-size: 0.9rem;">Lengua</a><a href="${mateHref}" style="color: white; text-decoration: none; font-size: 0.9rem;">Matemática</a><a href="index.html" style="color:#f1c40f;text-decoration:none;font-size:0.9rem;font-weight:bold;border-left:1px solid #7f8c8d;padding-left:20px;">⬅ Volver a ${volverText}</a></div></nav></header>`;
+            }
+            return '';
+        }
+
+        const TEMPLATE_HTML = `<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{PAGE_TITLE}}</title>
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-VL13MMLPRV"></scr` + `ipt>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'G-VL13MMLPRV');
+    </scr` + `ipt>
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root { --bg-color: {{THEME_BG}}; --header-color: {{THEME_HEADER}}; --title-color: {{THEME_TITLE}}; --accent-color: #FF7043; --copy-color: #9C27B0; --card-bg: #FFFFFF; --text-main: #37474F; }
+        * { box-sizing: border-box; }
+        body { background-color: var(--bg-color); font-family: 'Nunito', sans-serif; margin: 0; padding: 20px; color: var(--text-main); padding-bottom: 120px; }
+        #app-container { max-width: 900px; margin: 0 auto; }
+        h1 { text-align: center; color: var(--title-color); margin-bottom: 30px; font-size: 2rem; }
+        
+        #app-intro { background: rgba(255,255,255,0.6); padding: 15px; border-radius: 8px; margin-bottom: 30px; border-left: 5px solid var(--header-color); }
+        #app-intro a { color: var(--header-color); font-weight: bold; }
+        #raw-content-placeholder { display: none !important; }
+        
+        .ficha-card { background: var(--card-bg); border-radius: 12px; box-shadow: 0 4px 8px rgba(0,0,0,0.08); margin-bottom: 25px; overflow: hidden; border: 2px solid transparent; transition: all 0.3s ease; }
+        .ficha-card.selected-for-print { border-color: var(--accent-color); box-shadow: 0 0 0 4px rgba(255, 112, 67, 0.2); }
+        .ficha-header { background-color: var(--header-color); padding: 10px 15px; display: flex; align-items: center; gap: 10px; cursor: pointer; user-select: none; }
+        .ficha-title { color: white; font-weight: 700; font-size: 1.1rem; flex-grow: 1; }
+        .header-actions { display: flex; align-items: center; gap: 10px; }
+        .btn-send-editor { background: rgba(255,255,255,0.2); border: none; color: white; width: 32px; height: 32px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; transition: background 0.2s; text-decoration: none; }
+        .btn-send-editor:hover { background: rgba(255,255,255,0.4); transform: scale(1.1); }
+        .btn-toggle-card { background: rgba(255,255,255,0.22); border: 1px solid rgba(255,255,255,.45); color: white; border-radius: 999px; padding: 7px 10px; cursor: pointer; font-weight: 900; display: inline-flex; align-items: center; gap: 5px; white-space: nowrap; }
+        .btn-toggle-card:hover { background: rgba(255,255,255,0.34); transform: translateY(-1px); }
+        .custom-checkbox { width: 28px; height: 28px; background: white; border-radius: 6px; display: flex; align-items: center; justify-content: center; cursor: pointer; border: 2px solid rgba(255,255,255,0.6); }
+        .ficha-card.selected-for-print .custom-checkbox { background: var(--accent-color); border-color: white; }
+        .custom-checkbox::after { content: '✓'; color: white; font-weight: 900; font-size: 18px; display: none; }
+        .ficha-card.selected-for-print .custom-checkbox::after { display: block; }
+        .ficha-body { padding: 0 20px; max-height: 0; overflow: hidden; transition: max-height 0.4s ease, padding 0.3s; background: white; }
+        .ficha-card.open .ficha-body { padding: 25px 20px; max-height: none; overflow: visible; }
+        
+        /* --- CORRECCIÓN NUCLEAR Y ROMPE-MARCOS --- */
+        .ficha-body * { font-family: 'Nunito', sans-serif !important; box-sizing: border-box !important; line-height: 1.5 !important; }
+        .ficha-body img { display: block !important; max-width: 100% !important; height: auto !important; margin: 15px auto !important; transform: none !important; box-shadow: none !important; border-radius: 6px !important; }
+        .ficha-body table { width: 100% !important; border-collapse: collapse !important; margin: 10px 0 !important; table-layout: auto !important; }
+       .ficha-body td, .ficha-body th { padding: 8px !important; vertical-align: top !important; border: 1px solid #000 !important; word-wrap: break-word; }
+        .ficha-body p, .ficha-body span { background-color: transparent !important; color: #444 !important; }
+        .ficha-body span { overflow: visible !important; width: auto !important; height: auto !important; max-width: 100% !important; display: inline-block !important; }
+        
+        .fab-container { position: fixed; bottom: 30px; right: 30px; display: flex; flex-direction: column-reverse; gap: 15px; z-index: 1000; align-items: center; }
+        .fab { width: 56px; height: 56px; border-radius: 50%; border: none; box-shadow: 0 4px 12px rgba(0,0,0,0.3); cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 24px; transition: transform 0.2s; position: relative; }
+        .fab:hover { transform: scale(1.1); }
+        .fab-print { background-color: var(--accent-color); color: white; width: 70px; height: 70px; font-size: 30px; }
+        .fab-print:disabled { background-color: #CFD8DC; cursor: not-allowed; }
+        .badge { position: absolute; top: 0; right: 0; background-color: #D32F2F; color: white; font-size: 12px; font-weight: bold; width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 2px solid white; }
+        .fab-copy { background-color: var(--copy-color); color: white; display: none; }
+        .fab-clear { background: white; color: #E57373; width: 45px; height: 45px; font-size: 18px; display: none; }
+        
+        @media print {
+            body { background: white; padding: 0; margin: 0; }
+           .fab-container, header, nav, .header-actions, #app-container > p, #app-container > h1, #app-intro { display: none !important; }
+            #app-container { max-width: 100%; margin: 0; }
+            .page-header { display: none !important; }
+            .ficha-card { display: none; border: none; box-shadow: none; margin: 0; margin-bottom: 20px; break-inside: auto; }
+            .ficha-card.selected-for-print[data-print="1"] { display: block !important; }
+            .ficha-header { background-color: transparent !important; color: #000 !important; padding: 5px 0 !important; border-bottom: 2px solid #000 !important; display: flex !important; }
+            .ficha-title { color: #000 !important; font-weight: bold !important; font-size: 1.2rem !important; }
+            .ficha-body { max-height: none !important; display: block !important; padding: 10px 0 !important; overflow: visible !important; color: #000 !important; }
+            .ficha-body p { display: block !important; color: #000 !important; }
+            .ficha-body * { color: #000 !important; visibility: visible !important; opacity: 1 !important; }
+            .ficha-body table { table-layout: auto !important; }
+        }
+    </style>
+</head>
+<body>
+    {{NAV_BAR}}
+    {{NAV_SPACER}}
+    <div id="app-container">
+        <div class="page-header">
+            {{HERO_BLOCK}}
+        </div>
+        <p style="text-align: center; margin-bottom: 5px; color: #607D8B; font-size: 0.95rem;">
+            <small>Presionar <span style="background: rgba(0,0,0,0.05); border-radius: 50%; padding: 2px 6px;">▸ Abrir</span> para desplegar la ficha o <span style="background: rgba(0,0,0,0.05); border-radius: 50%; padding: 2px 6px;">↗️</span> para editarla</small>
+        </p>
+        <p style="text-align: center; margin-bottom: 35px; color: #607D8B; font-size: 0.95rem;">
+            <small>Marcar la casilla y luego 📋 para copiar la actividad o 🖨️ para imprimir o exportar a .PDF</small>
+        </p>
+        
+        {{INTRO_BLOCK}}
+        <div id="fichas-render-area"></div>
+    </div>
+    
+    <div class="fab-container">
+        <button class="fab fab-print" id="btn-print" onclick="printSelected()" disabled>🖨️ <div class="badge" id="print-badge" style="display: none;">0</div></button>
+        <button class="fab fab-copy" id="btn-copy" onclick="copySelected()">📋</button>
+        <button class="fab fab-clear" id="btn-clear" onclick="clearSelection()">🗑️</button>
+    </div>
+    
+    <script type="application/json" id="constructor-fichas-state">{{PROJECT_STATE_JSON}}</scr` + `ipt>
+    <div id="raw-content-placeholder">{{RAW_CONTENT_INJECTION}}</div>
+    
+    <script>
+        const EDITOR_URL = '{{EDITOR_URL}}'; 
+        document.addEventListener('DOMContentLoaded', () => { processRawContent(); });
+        let selectedCount = 0;
+        function processRawContent() {
+            const rawContainer = document.getElementById('raw-content-placeholder');
+            const renderArea = document.getElementById('fichas-render-area');
+            const fullHtml = rawContainer.innerHTML;
+            if (!fullHtml.trim()) return;
+            const chunks = fullHtml.split(/<hr[^>]*>/i);
+            let fichaIndex = 1;
+            chunks.forEach((chunk) => {
+                if (!chunk.trim()) return;
+                const tempDiv = document.createElement('div');
+                tempDiv.innerHTML = chunk;
+                const table = tempDiv.querySelector('table');
+                let titleText = \`Ficha \${fichaIndex}\`;
+                let contentHtml = chunk;
+                if (table) {
+                    const rows = table.querySelectorAll('tr');
+                    if (rows.length >= 2) {
+                        titleText = rows[0].innerText.trim() || titleText;
+                        const contentTd = rows[1].querySelector('td');
+                        contentHtml = contentTd ? contentTd.innerHTML : rows[1].innerHTML;
+                    }
+                }
+                const opts = table ? {
+                    startOpen: table.dataset.open === '1',
+                    allowCopy: table.dataset.copy !== '0',
+                    allowPrint: table.dataset.print !== '0',
+                    allowEditor: table.dataset.editor !== '0'
+                } : {};
+                createCard(fichaIndex, titleText, contentHtml, renderArea, opts);
+                fichaIndex++;
+            });
+        }
+        function createCard(id, title, content, container, opts = {}) {
+            const settings = Object.assign({ startOpen:false, allowCopy:true, allowPrint:true, allowEditor:true }, opts || {});
+            const card = document.createElement('div');
+            card.className = 'ficha-card' + (settings.startOpen ? ' open' : '');
+            card.id = \`ficha-\${id}\`;
+            card.dataset.copy = settings.allowCopy ? '1' : '0';
+            card.dataset.print = settings.allowPrint ? '1' : '0';
+            card.dataset.editor = settings.allowEditor ? '1' : '0';
+            const header = document.createElement('div'); header.className = 'ficha-header';
+            header.onclick = (e) => { if (!e.target.closest('button') && !e.target.closest('.custom-checkbox')) toggleCard(card); };
+            const hTitle = document.createElement('div'); hTitle.className = 'ficha-title'; hTitle.innerText = title;
+            const actionsDiv = document.createElement('div'); actionsDiv.className = 'header-actions';
+            if (settings.allowEditor) {
+                const btnEdit = document.createElement('button'); btnEdit.className = 'btn-send-editor'; btnEdit.innerHTML = '↗️'; btnEdit.title = 'Abrir en el editor de textos';
+                btnEdit.onclick = (e) => { e.stopPropagation(); sendToEditor(title, content); };
+                actionsDiv.appendChild(btnEdit);
+            }
+            const btnToggle = document.createElement('button');
+            btnToggle.className = 'btn-toggle-card';
+            btnToggle.type = 'button';
+            btnToggle.innerText = settings.startOpen ? '▾ Cerrar' : '▸ Abrir';
+            btnToggle.onclick = (e) => { e.stopPropagation(); toggleCard(card); };
+            actionsDiv.appendChild(btnToggle);
+            if (settings.allowCopy || settings.allowPrint) {
+                const checkbox = document.createElement('div'); checkbox.className = 'custom-checkbox'; checkbox.title = 'Seleccionar ficha';
+                checkbox.onclick = (e) => { e.stopPropagation(); toggleSelection(card); };
+                actionsDiv.appendChild(checkbox);
+            }
+            header.appendChild(hTitle); header.appendChild(actionsDiv);
+            const body = document.createElement('div'); body.className = 'ficha-body'; body.innerHTML = content;
+            card.appendChild(header); card.appendChild(body); container.appendChild(card);
+        }
+        function sendToEditor(title, htmlContent) {
+            const tempDiv = document.createElement('div');
+            tempDiv.innerHTML = htmlContent;
+            const images = tempDiv.querySelectorAll('img');
+            images.forEach(img => { if (img.getAttribute('src')) { img.src = img.src; } });
+            const packageHTML = \`<h3>\${title}</h3>\${tempDiv.innerHTML}\`;
+            localStorage.setItem('import_content', packageHTML);
+            window.open(EDITOR_URL, 'Editor de Textos');
+        }
+        function toggleCard(card) {
+            card.classList.toggle('open');
+            const btn = card.querySelector('.btn-toggle-card');
+            if (btn) btn.innerText = card.classList.contains('open') ? '▾ Cerrar' : '▸ Abrir';
+        }
+        function toggleSelection(card) { card.classList.toggle('selected-for-print'); updateFabState(); }
+        function clearSelection() { document.querySelectorAll('.ficha-card.selected-for-print').forEach(c => c.classList.remove('selected-for-print')); updateFabState(); }
+        function updateFabState() {
+            const selected = document.querySelectorAll('.ficha-card.selected-for-print');
+            const printable = document.querySelectorAll('.ficha-card.selected-for-print[data-print="1"]');
+            const copyable = document.querySelectorAll('.ficha-card.selected-for-print[data-copy="1"]');
+            selectedCount = selected.length; 
+            const btnPrint = document.getElementById('btn-print'); const btnCopy = document.getElementById('btn-copy'); const badge = document.getElementById('print-badge'); const btnClear = document.getElementById('btn-clear');
+            if (selectedCount > 0) {
+                btnPrint.disabled = printable.length === 0;
+                badge.style.display = 'flex'; badge.innerText = selectedCount;
+                btnClear.style.display = 'flex';
+                btnCopy.style.display = copyable.length > 0 ? 'flex' : 'none';
+            } else {
+                btnPrint.disabled = true; badge.style.display = 'none'; btnClear.style.display = 'none'; btnCopy.style.display = 'none';
+            }
+        }
+        function copySelected() {
+            const selected = document.querySelectorAll('.ficha-card.selected-for-print[data-copy="1"]');
+            if (selected.length === 0) return;
+            const temp = document.createElement('div'); temp.style.backgroundColor = '#fff'; temp.style.color = '#000'; temp.style.position = 'absolute'; temp.style.left = '-9999px';
+            selected.forEach(card => {
+                const title = card.querySelector('.ficha-title').innerText;
+                const bodyClone = card.querySelector('.ficha-body').cloneNode(true);
+                const els = bodyClone.getElementsByTagName("*"); for(let el of els) { el.style.background = "transparent"; }
+                temp.innerHTML += \`<div><h2>\${title}</h2><div>\${bodyClone.innerHTML}</div></div><hr>\`;
+            });
+            document.body.appendChild(temp); const range = document.createRange(); range.selectNode(temp); window.getSelection().removeAllRanges(); window.getSelection().addRange(range); document.execCommand('copy'); alert('✅ ¡Fichas copiadas!'); document.body.removeChild(temp);
+        }
+        function printSelected() {
+            const printable = document.querySelectorAll('.ficha-card.selected-for-print[data-print="1"]');
+            if(printable.length>0) window.print();
+        }
+    </scr` + `ipt>
+    <div id="contenedor-pie"></div>
+    <script>
+      fetch('/pie.html')
+        .then(function(response) {
+          if (response.ok) return response.text();
+          throw new Error('No se pudo cargar el pie de página');
+        })
+        .then(function(data) {
+          document.getElementById('contenedor-pie').innerHTML = data;
+        })
+        .catch(function(error) {
+          console.error('Error:', error);
+        });
+    </scr` + `ipt>
+    <script src="/volver.js" defer></scr` + `ipt>
+</body>
+</html>`;
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            document.body.style.opacity = 1;
+            Instalacion.configure({ kind: 'fichas' });
+            await Instalacion.init();
+            Instalacion.mountStatus('inst-status');
+            Instalacion.onChange(() => { rehydrateImages(); renderHeroPreview(); });
+            loadState(); 
+            applyThemePreview();
+            toggleIntro();
+            toggleVolverInput();
+            toggleMascotButtons();
+            renderHeroPreview();
+            document.addEventListener('click', handleImageSelect);
+            document.addEventListener('focusin', handleEditorFocus);
+            document.addEventListener('keyup', handleEditorKeyup);
+            document.addEventListener('mouseup', handleEditorMouseup);
+            document.addEventListener('pointermove', handleImageResizeMove);
+            document.addEventListener('pointerup', stopImageResize);
+            window.addEventListener('resize', updateImageResizeHandle);
+            window.addEventListener('scroll', updateImageResizeHandle, true);
+            const resizeHandle = document.getElementById('image-resize-handle');
+            if (resizeHandle) resizeHandle.addEventListener('pointerdown', startImageResize);
+        });
+
+        function toggleActionsMenu(event) {
+            if (event) event.stopPropagation();
+            const menu = document.getElementById('actions-menu');
+            if (menu) menu.classList.toggle('menu-open');
+        }
+
+        function closeActionsMenu() {
+            const menu = document.getElementById('actions-menu');
+            if (menu) menu.classList.remove('menu-open');
+        }
+
+        document.addEventListener('click', (event) => {
+            const menu = document.getElementById('actions-menu');
+            if (menu && menu.classList.contains('menu-open') && !menu.contains(event.target)) {
+                closeActionsMenu();
+            }
+        });
+
+        document.addEventListener('keydown', (event) => {
+            if (event.key === 'Escape') closeActionsMenu();
+        });
+
+        document.addEventListener('click', (event) => {
+            if (event.target.closest('#actions-menu .btn-action')) {
+                setTimeout(closeActionsMenu, 120);
+            }
+        });
+
+        // --- LÓGICA DE INTERFAZ DEL ENCABEZADO ---
+        function toggleVolverInput() {
+            const val = document.getElementById('app-navbar').value;
+            document.getElementById('volver-text-group').style.display = val === 'volver' ? 'block' : 'none';
+        }
+
+        function toggleMascotButtons() {
+            const layout = document.getElementById('hero-layout').value;
+            const group = document.getElementById('mascot-buttons-group');
+            const btnGal2 = document.getElementById('btn-galeria-mascota2');
+            const btnSub2 = document.getElementById('btn-subir-mascota2');
+            const label2 = document.getElementById('mascota2-label');
+            if (layout === 'center') {
+                group.style.display = 'none';
+            } else if (layout === 'img-both') {
+                group.style.display = 'block';
+                btnGal2.style.display = 'block';
+                btnSub2.style.display = 'block';
+                label2.style.display = 'block';
+            } else {
+                group.style.display = 'block';
+                btnGal2.style.display = 'none';
+                btnSub2.style.display = 'none';
+                label2.style.display = 'none';
+            }
+            updateMascotLabels();
+        }
+
+        function updateMascotLabels() {
+            const l1 = document.getElementById('mascota1-label');
+            const l2 = document.getElementById('mascota2-label');
+            if (l1) l1.textContent = 'Mascota 1: ' + (heroImg1 ? safeImageName(heroImg1) || 'imagen cargada' : 'ninguna');
+            if (l2) l2.textContent = 'Mascota 2: ' + (heroImg2 ? safeImageName(heroImg2) || 'imagen cargada' : 'ninguna');
+        }
+
+        function openMascotaGallery(slot) {
+            galleryContext = 'mascota';
+            activeMascotaSlot = slot;
+            Instalacion.openGallery({ title: slot === 1 ? 'Elegir Mascota 1' : 'Elegir Mascota 2', onPick: name => selectGalleryImage(name) });
+        }
+
+        function getEditableFromSelection() {
+            const sel = window.getSelection();
+            if (!sel || !sel.rangeCount) return null;
+            const node = sel.getRangeAt(0).commonAncestorContainer;
+            const element = node.nodeType === 1 ? node : node.parentElement;
+            return element ? element.closest('[contenteditable="true"]') : null;
+        }
+
+        function saveEditorSelection() {
+            const editor = getEditableFromSelection();
+            if (!editor) return;
+            activeEditorElement = editor;
+            const sel = window.getSelection();
+            if (sel && sel.rangeCount) savedEditorRange = sel.getRangeAt(0).cloneRange();
+        }
+
+        function restoreEditorSelection() {
+            if (activeEditorElement) activeEditorElement.focus();
+            if (savedEditorRange) {
+                const sel = window.getSelection();
+                sel.removeAllRanges();
+                sel.addRange(savedEditorRange);
+            }
+        }
+
+        function openEditorImageGallery() {
+            saveEditorSelection();
+            galleryContext = 'editor';
+            Instalacion.openGallery({ title: 'Insertar imagen en ficha', onPick: name => selectGalleryImage(name) });
+        }
+
+        function closeGalleryModal() { Instalacion.closeGallery(); }
+
+        function insertImageByName(filename) {
+            const name = safeImageName(filename);
+            if (!name) return;
+            if (!activeEditorElement || !document.body.contains(activeEditorElement)) {
+                alert('Primero hacé clic dentro de la introducción o dentro de una ficha para indicar dónde insertar la imagen.');
+                return;
+            }
+            restoreEditorSelection();
+            const src = resolveImageSrc(name);
+            const safeName = String(name).replace(/"/g, '&quot;');
+            const html = `<img data-img="${safeName}" src="${src}" style="max-width:100%; height:auto;">`;
+            document.execCommand('insertHTML', false, html);
+            saveState();
+        }
+
+        function selectGalleryImage(filename) {
+            const name = safeImageName(filename);
+            if (!name) return;
+            if (galleryContext === 'editor') {
+                insertImageByName(name);
+                closeGalleryModal();
+                return;
+            }
+            if (activeMascotaSlot === 1) heroImg1 = name;
+            else heroImg2 = name;
+            closeGalleryModal();
+            updateMascotLabels();
+            saveState();
+            renderHeroPreview();
+        }
+
+        async function uploadMascotaToImages(input, num) {
+            if (!input.files || !input.files[0]) return;
+            activeMascotaSlot = num;
+            galleryContext = 'mascota';
+            await uploadFileToImages(input.files[0], true);
+            input.value = '';
+        }
+
+        async function uploadFileToImages(file, selectAfterUpload) {
+            try {
+                const name = await Instalacion.addImage(file);
+                if (selectAfterUpload) selectGalleryImage(name);
+            } catch (error) {
+                if (error && error.message === 'NO_CONECTADA') alert('Para copiar la imagen a images/ primero conectá la carpeta de trabajo (barra de arriba). También podés pegar el archivo a mano en images/ y elegirlo desde la galería.');
+                else alert('No se pudo agregar la imagen: ' + (error && error.message ? error.message : error));
+            }
+        }
+
+        function clearMascotas() {
+            heroImg1 = ""; heroImg2 = "";
+            updateMascotLabels();
+            saveState(); renderHeroPreview();
+        }
+
+        function renderHeroPreview() {
+            const layout = document.getElementById('hero-layout').value;
+            const title = document.getElementById('app-title').value || "Mis Actividades";
+            const container = document.getElementById('hero-preview');
+            
+            let imgTag1 = heroImg1 ? `<img src="${resolveImageSrc(heroImg1)}" style="max-height: 100px; width: auto; object-fit: contain;">` : '';
+            let imgTag2 = heroImg2 ? `<img src="${resolveImageSrc(heroImg2)}" style="max-height: 100px; width: auto; object-fit: contain;">` : '';
+            if (layout === 'img-both' && !heroImg2 && heroImg1) imgTag2 = imgTag1;
+            
+            let textBlock = `<div><h1 style="margin:0; font-size: 2.2rem; color: var(--preview-title);">${title}</h1></div>`;
+            
+            let flex = '';
+            if (layout === 'img-left' && imgTag1) flex = `<div style="display:flex; justify-content:center; align-items:center; gap:20px; flex-wrap:wrap;">${imgTag1}${textBlock}</div>`;
+            else if (layout === 'img-right' && imgTag1) flex = `<div style="display:flex; justify-content:center; align-items:center; gap:20px; flex-wrap:wrap;">${textBlock}${imgTag1}</div>`;
+            else if (layout === 'img-both' && imgTag1) flex = `<div style="display:flex; justify-content:center; align-items:center; gap:20px; flex-wrap:wrap;">${imgTag1}${textBlock}${imgTag2}</div>`;
+            else if (layout === 'img-top' && imgTag1) flex = `<div style="display:flex; flex-direction:column; justify-content:center; align-items:center; gap:15px;">${imgTag1}${textBlock}</div>`;
+            else flex = textBlock;
+            
+            container.innerHTML = flex;
+            updateMascotLabels();
+        }
+
+        // --- SISTEMA DE ARRASTRAR Y SOLTAR ---
+        function setupDragAndDrop(card) {
+            const handle = card.querySelector('.drag-handle');
+            
+            handle.onmousedown = () => card.setAttribute('draggable', 'true');
+            handle.onmouseup = () => card.removeAttribute('draggable');
+            handle.onmouseleave = () => card.removeAttribute('draggable');
+
+            card.addEventListener('dragstart', (e) => {
+                e.dataTransfer.effectAllowed = 'move';
+                e.dataTransfer.setData('text/plain', card.id);
+                setTimeout(() => card.style.opacity = '0.5', 0);
+            });
+
+            card.addEventListener('dragend', () => {
+                card.style.opacity = '1';
+                card.removeAttribute('draggable');
+                document.querySelectorAll('.editor-card').forEach(c => c.style.borderTop = '1px solid var(--border)');
+                saveState();
+            });
+
+            card.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                e.dataTransfer.dropEffect = 'move';
+                card.style.borderTop = '4px solid var(--primary)';
+            });
+
+            card.addEventListener('dragleave', () => {
+                card.style.borderTop = '1px solid var(--border)';
+            });
+
+            card.addEventListener('drop', (e) => {
+                e.preventDefault();
+                card.style.borderTop = '1px solid var(--border)';
+                const draggedId = e.dataTransfer.getData('text/plain');
+                const draggedCard = document.getElementById(draggedId);
+                const container = document.getElementById('cards-container');
+                
+                if (draggedCard && draggedCard !== card) {
+                    const allCards = Array.from(container.children);
+                    const fromIndex = allCards.indexOf(draggedCard);
+                    const toIndex = allCards.indexOf(card);
+                    
+                    if (fromIndex < toIndex) container.insertBefore(draggedCard, card.nextSibling);
+                    else container.insertBefore(draggedCard, card);
+                }
+            });
+        }
+
+        // --- FUNCIONES PRINCIPALES ---
+        function createCustomLink() {
+            let url = prompt("1. Ingresa la URL:", "https://");
+            if (!url) return;
+            if (!url.startsWith('http://') && !url.startsWith('https://')) url = 'https://' + url;
+            let text = prompt("2. Texto del enlace:", window.getSelection().toString() || "Click aquí");
+            if (text) formatDoc('insertHTML', `<a href="${url}" target="_blank" style="color: blue; text-decoration: underline;">${text}</a>`);
+        }
+
+        function toggleIntro() { document.getElementById('intro-container').style.display = document.getElementById('show-intro').checked ? 'block' : 'none'; }
+        
+        function collectProjectState() {
+            const cards = [];
+            document.querySelectorAll('.editor-card').forEach(card => {
+                cards.push({
+                    title: card.querySelector('.card-header-input').value,
+                    content: normalizeImagesHTML(card.querySelector('.card-content-editor').innerHTML),
+                    startOpen: !!card.querySelector('.card-start-open')?.checked,
+                    allowCopy: !!card.querySelector('.card-allow-copy')?.checked,
+                    allowPrint: !!card.querySelector('.card-allow-print')?.checked,
+                    allowEditor: !!card.querySelector('.card-allow-editor')?.checked
+                });
+            });
+            return {
+                schema: 'constructor-fichas',
+                version: 'v12-nombre-fijo-sin-numeracion',
+                appTitle: document.getElementById('app-title').value,
+                cloudJsonFilename: document.getElementById('cloud-json-filename')?.value || '',
+                appTheme: document.getElementById('app-theme').value,
+                appNavbar: document.getElementById('app-navbar').value,
+                outputLocation: document.getElementById('app-output-location')?.value || 'subfolder',
+                volverText: document.getElementById('volver-text').value,
+                heroLayout: document.getElementById('hero-layout').value,
+                heroImg1: heroImg1,
+                heroImg2: heroImg2,
+                showIntro: document.getElementById('show-intro').checked,
+                introText: normalizeImagesHTML(document.getElementById('intro-editor').innerHTML),
+                cards
+            };
+        }
+
+        function saveState() {
+            localStorage.setItem('constructor_state', JSON.stringify(collectProjectState()));
+        }
+
+        function applyProjectState(state, shouldSave = true) {
+            if (!state || typeof state !== 'object') throw new Error('El archivo no tiene un formato válido de constructor de fichas.');
+            document.getElementById('cards-container').innerHTML = '';
+
+            document.getElementById('app-title').value = state.appTitle || 'Mis Actividades';
+            if (document.getElementById('cloud-json-filename')) {
+                document.getElementById('cloud-json-filename').value = normalizeCloudFilename(state.cloudJsonFilename || defaultCloudFilename());
+            }
+            document.getElementById('app-theme').value = state.appTheme || 'lengua';
+            document.getElementById('app-navbar').value = state.appNavbar || 'volver';
+            if (document.getElementById('app-output-location')) document.getElementById('app-output-location').value = state.outputLocation || 'subfolder';
+            document.getElementById('volver-text').value = state.volverText || 'Textos';
+            document.getElementById('hero-layout').value = state.heroLayout || 'center';
+            heroImg1 = state.heroImg1 || '';
+            heroImg2 = state.heroImg2 || '';
+
+            document.getElementById('intro-editor').innerHTML = hydrateImagesHTML(state.introText || '');
+            document.getElementById('show-intro').checked = !!state.showIntro;
+
+            if (state.cards && state.cards.length > 0) state.cards.forEach(c => createEditorCard(c.title, c.content, c));
+            else createEditorCard();
+
+            applyThemePreview();
+            toggleIntro();
+            toggleVolverInput();
+            toggleMascotButtons();
+            updateMascotLabels();
+            renderHeroPreview();
+            if (shouldSave) saveState();
+        }
+
+        function loadState() {
+            const savedState = localStorage.getItem('constructor_state');
+            if (savedState) {
+                try {
+                    applyProjectState(JSON.parse(savedState), false);
+                } catch (e) {
+                    console.error(e);
+                    document.getElementById('cards-container').innerHTML = '';
+                    createEditorCard();
+                }
+            } else {
+                document.getElementById('cards-container').innerHTML = '';
+                createEditorCard();
+            }
+        }
+
+        async function downloadProjectJSON() {
+            const nombre = getCloudFilenameFromInput();
+            saveState();
+            const state = collectProjectState();
+            state.cloudJsonFilename = nombre;
+            state.savedAt = new Date().toISOString();
+            await Instalacion.saveDraft(nombre, JSON.stringify(state, null, 2));
+        }
+        function openDraftsLocal() {
+            Instalacion.openDrafts({ onOpen: (text, name) => importProjectText(text, name) });
+        }
+        function showUsedImages() {
+            const st = collectProjectState();
+            const names = new Set();
+            [st.heroImg1, st.heroImg2].forEach(n => { if (n && !/^data:/i.test(n)) names.add(imageNameFrom(n)); });
+            Instalacion.usedImagesFromHTML(st.introText).forEach(n => names.add(n));
+            st.cards.forEach(c => Instalacion.usedImagesFromHTML(c.content).forEach(n => names.add(n)));
+            Instalacion.openImageReport(Array.from(names));
+        }
+        function htmlFilename() { return getCloudFilenameFromInput().replace(/\.json$/i, '') + '.html'; }
+        function htmlEscape(value) {
+            return String(value ?? '').replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
+        }
+
+        function jsEscape(value) {
+            return String(value ?? '').replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/\n/g, ' ');
+        }
+
+        function defaultCloudFilename() {
+            return 'borrador_fichas.json';
+        }
+
+        function normalizeCloudFilename(value) {
+            let nombre = String(value || '').trim();
+            if (!nombre) nombre = defaultCloudFilename();
+            nombre = nombre.replace(/^.*[\\/]/, '').replace(/[^a-zA-Z0-9._-]+/g, '-').replace(/^[-_.]+|[-_.]+$/g, '');
+            if (!nombre) nombre = defaultCloudFilename();
+            if (!nombre.toLowerCase().endsWith('.json')) nombre += '.json';
+            return nombre;
+        }
+
+        function getCloudFilenameFromInput() {
+            const input = document.getElementById('cloud-json-filename');
+            const nombre = normalizeCloudFilename(input ? input.value : '');
+            if (input) input.value = nombre;
+            return nombre;
+        }
+
+        function boolDefault(value, fallback) {
+            return value === undefined ? fallback : !!value;
+        }
+
+        function createEditorCard(title = "", content = "", options = {}) {
+            const container = document.getElementById('cards-container');
+            const card = document.createElement('div'); 
+            card.className = 'editor-card';
+            card.id = 'card_' + Math.random().toString(36).substr(2, 9);
+            const startOpen = boolDefault(options.startOpen, false);
+            const allowCopy = boolDefault(options.allowCopy, true);
+            const allowPrint = boolDefault(options.allowPrint, true);
+            const allowEditor = boolDefault(options.allowEditor, true);
+            card.innerHTML = `
+                <div class="card-header-area">
+                    <span class="drag-handle" title="Arrastrar para mover">⋮⋮</span>
+                    <input type="text" class="card-header-input" placeholder="Título de la Ficha" value="${htmlEscape(title)}" oninput="saveState()">
+                    <button class="btn-delete" onclick="deleteCard(this)" title="Borrar">X</button>
+                </div>
+                <div class="card-options-area">
+                    <label><input type="checkbox" class="card-start-open" onchange="saveState()" ${startOpen ? 'checked' : ''}> Empezar abierta</label>
+                    <label><input type="checkbox" class="card-allow-copy" onchange="saveState()" ${allowCopy ? 'checked' : ''}> Copiar</label>
+                    <label><input type="checkbox" class="card-allow-print" onchange="saveState()" ${allowPrint ? 'checked' : ''}> Imprimir</label>
+                    <label><input type="checkbox" class="card-allow-editor" onchange="saveState()" ${allowEditor ? 'checked' : ''}> Editor</label>
+                </div>
+                <div class="card-content-area">
+                    <div class="card-content-editor" contenteditable="true" placeholder="Escribe o pega aquí..." oninput="saveState()">${hydrateImagesHTML(content)}</div>
+                </div>
+            `;
+            container.appendChild(card);
+            setupDragAndDrop(card);
+        }
+
+        function deleteCard(btn) { if(confirm("¿Borrar?")) { btn.closest('.editor-card').remove(); saveState(); } }
+        function addNewCard() { createEditorCard(); saveState(); }
+        function resetProject() { if(confirm("¿Empezar de cero?")) { localStorage.removeItem('constructor_state'); heroImg1 = ""; heroImg2 = ""; loadState(); renderHeroPreview(); } }
+        function formatDoc(cmd, value = null) { document.execCommand(cmd, false, value); saveState(); }
+        
+        function togglePopup(id) { 
+            document.querySelectorAll('.popup-menu').forEach(p => { if (p.id !== id) p.style.display = 'none'; });
+            const popup = document.getElementById(id);
+            popup.style.display = popup.style.display === 'block' ? 'none' : 'block'; 
+        }
+        
+        function insertEmoji(emoji) { formatDoc('insertText', emoji); }
+        function clampNumber(value, min, max, fallback) {
+            const n = parseInt(value, 10);
+            if (Number.isNaN(n)) return fallback;
+            return Math.max(min, Math.min(max, n));
+        }
+
+        function getTableOptionsFromModal() {
+            return {
+                rows: clampNumber(document.getElementById('table-rows').value, 1, 30, 3),
+                cols: clampNumber(document.getElementById('table-cols').value, 1, 12, 3),
+                width: document.getElementById('table-width').value || '100%',
+                align: document.getElementById('table-align').value || 'left',
+                borderWidth: clampNumber(document.getElementById('table-border-width').value, 0, 6, 1),
+                borderColor: document.getElementById('table-border-color').value || '#999999',
+                headerBg: document.getElementById('table-header-bg').value || '#eeeeee',
+                padding: clampNumber(document.getElementById('table-padding').value, 2, 30, 5),
+                headerRow: document.getElementById('table-header-row').checked,
+                headerCol: document.getElementById('table-header-col').checked
+            };
+        }
+
+        function cellStyleFromOptions(opts, isHeader) {
+            const border = opts.borderWidth > 0 ? `${opts.borderWidth}px solid ${opts.borderColor}` : 'none';
+            const bg = isHeader ? ` background:${opts.headerBg}; font-weight:700;` : '';
+            return `border:${border}; padding:${opts.padding}px; text-align:${opts.align}; min-width:40px; vertical-align:top;${bg}`;
+        }
+
+        function buildTableHTML(opts) {
+            const tableWidth = opts.width === 'auto' ? 'auto' : opts.width;
+            let html = `<table style="width:${tableWidth}; border-collapse:collapse; margin:10px 0; table-layout:auto;">`;
+            for (let r = 0; r < opts.rows; r++) {
+                html += '<tr>';
+                for (let c = 0; c < opts.cols; c++) {
+                    const isHeader = (opts.headerRow && r === 0) || (opts.headerCol && c === 0);
+                    const tag = isHeader ? 'th' : 'td';
+                    const content = isHeader ? '&nbsp;' : '&nbsp;';
+                    html += `<${tag} style="${cellStyleFromOptions(opts, isHeader)}">${content}</${tag}>`;
+                }
+                html += '</tr>';
+            }
+            html += '</table><p><br></p>';
+            return html;
+        }
+
+        function openTableModal(mode = 'insert') {
+            tableModalMode = mode;
+            if (mode === 'insert') saveEditorSelection();
+            const modal = document.getElementById('table-modal');
+            const title = document.getElementById('table-modal-title');
+            const help = document.getElementById('table-modal-help');
+            const btn = document.getElementById('table-apply-btn');
+            const rowsGroup = document.getElementById('table-rows-group');
+            const colsGroup = document.getElementById('table-cols-group');
+            const headerRowLabel = document.getElementById('table-header-row-label');
+            const headerColLabel = document.getElementById('table-header-col-label');
+
+            if (mode === 'format') {
+                const table = getCurrentTable();
+                if (!table) {
+                    alert('Primero hacé clic dentro de una tabla para cambiar su estilo.');
+                    return;
+                }
+                title.textContent = 'Formato de tabla seleccionada';
+                help.textContent = 'Aplicá ancho, bordes, espaciado y alineación a la tabla donde está el cursor.';
+                btn.textContent = 'Aplicar formato';
+                rowsGroup.style.display = 'none';
+                colsGroup.style.display = 'none';
+                headerRowLabel.style.display = 'none';
+                headerColLabel.style.display = 'none';
+                readTableStyleIntoModal(table);
+            } else {
+                title.textContent = 'Insertar tabla';
+                help.textContent = 'Elegí la estructura y el estilo inicial de la tabla.';
+                btn.textContent = 'Insertar tabla';
+                rowsGroup.style.display = '';
+                colsGroup.style.display = '';
+                headerRowLabel.style.display = '';
+                headerColLabel.style.display = '';
+            }
+            modal.style.display = 'flex';
+        }
+
+        function closeTableModal() {
+            document.getElementById('table-modal').style.display = 'none';
+        }
+
+        function applyTableModal() {
+            const opts = getTableOptionsFromModal();
+            if (tableModalMode === 'format') {
+                const table = getCurrentTable();
+                if (!table) return alert('Primero hacé clic dentro de una tabla.');
+                applyStyleToTable(table, opts);
+                saveState();
+                closeTableModal();
+                return;
+            }
+            if (!activeEditorElement || !document.body.contains(activeEditorElement)) {
+                alert('Primero hacé clic dentro de la introducción o de una ficha para indicar dónde insertar la tabla.');
+                return;
+            }
+            restoreEditorSelection();
+            formatDoc('insertHTML', buildTableHTML(opts));
+            closeTableModal();
+        }
+
+        function readTableStyleIntoModal(table) {
+            const firstCell = table.querySelector('td,th');
+            if (!firstCell) return;
+            const tableWidth = table.style.width || '100%';
+            const borderMatch = (firstCell.style.border || '').match(/(\d+)px\s+solid\s+(.+)/);
+            const paddingMatch = (firstCell.style.padding || '').match(/(\d+)px/);
+            document.getElementById('table-width').value = ['100%','75%','50%','auto'].includes(tableWidth) ? tableWidth : '100%';
+            document.getElementById('table-align').value = firstCell.style.textAlign || 'left';
+            document.getElementById('table-border-width').value = borderMatch ? borderMatch[1] : (firstCell.style.border === 'none' ? '0' : '1');
+            document.getElementById('table-padding').value = paddingMatch ? paddingMatch[1] : '5';
+        }
+
+        function applyStyleToTable(table, opts) {
+            table.style.width = opts.width === 'auto' ? 'auto' : opts.width;
+            table.style.borderCollapse = 'collapse';
+            table.style.margin = '10px 0';
+            table.style.tableLayout = 'auto';
+            table.querySelectorAll('td,th').forEach(cell => {
+                const isHeader = cell.tagName === 'TH';
+                cell.style.border = opts.borderWidth > 0 ? `${opts.borderWidth}px solid ${opts.borderColor}` : 'none';
+                cell.style.padding = opts.padding + 'px';
+                cell.style.textAlign = opts.align;
+                cell.style.minWidth = '40px';
+                cell.style.verticalAlign = 'top';
+                if (isHeader) {
+                    cell.style.background = opts.headerBg;
+                    cell.style.fontWeight = '700';
+                }
+            });
+        }
+
+        function getCurrentTableCell() {
+            const sel = window.getSelection();
+            if (!sel || !sel.rangeCount) return null;
+            let node = sel.anchorNode;
+            if (node && node.nodeType !== 1) node = node.parentNode;
+            while (node && node.nodeName !== 'TD' && node.nodeName !== 'TH') node = node.parentNode;
+            return node && (node.nodeName === 'TD' || node.nodeName === 'TH') ? node : null;
+        }
+
+        function getCurrentTable() {
+            const cell = getCurrentTableCell();
+            if (!cell) return null;
+            return cell.closest('table');
+        }
+
+        function cloneCellForNewRow(sourceCell) {
+            const c = document.createElement(sourceCell.tagName === 'TH' ? 'th' : 'td');
+            c.innerHTML = '&nbsp;';
+            c.setAttribute('style', sourceCell.getAttribute('style') || 'border:1px solid #999; padding:5px;');
+            return c;
+        }
+
+        function cloneCellForNewCol(sourceCell) {
+            const c = document.createElement(sourceCell.tagName === 'TH' ? 'th' : 'td');
+            c.innerHTML = '&nbsp;';
+            c.setAttribute('style', sourceCell.getAttribute('style') || 'border:1px solid #999; padding:5px;');
+            return c;
+        }
+
+        function tableAction(action) {
+            const cell = getCurrentTableCell();
+            if (!cell) {
+                alert('Primero hacé clic dentro de una celda de la tabla.');
+                return;
+            }
+            const row = cell.parentNode;
+            const table = cell.closest('table');
+            if (!table) return;
+
+            if (action === 'addRow') {
+                const newRow = table.insertRow(row.rowIndex + 1);
+                for (let i = 0; i < row.cells.length; i++) newRow.appendChild(cloneCellForNewRow(row.cells[i]));
+            } else if (action === 'deleteRow') {
+                if (table.rows.length <= 1) return alert('La tabla debe conservar al menos una fila.');
+                table.deleteRow(row.rowIndex);
+            } else if (action === 'addCol') {
+                const index = cell.cellIndex + 1;
+                for (let i = 0; i < table.rows.length; i++) {
+                    const ref = table.rows[i].cells[Math.max(0, cell.cellIndex)] || table.rows[i].cells[0] || cell;
+                    const newCell = cloneCellForNewCol(ref);
+                    table.rows[i].insertBefore(newCell, table.rows[i].cells[index] || null);
+                }
+            } else if (action === 'deleteCol') {
+                const colCount = row.cells.length;
+                if (colCount <= 1) return alert('La tabla debe conservar al menos una columna.');
+                const index = cell.cellIndex;
+                for (let i = 0; i < table.rows.length; i++) {
+                    if (table.rows[i].cells[index]) table.rows[i].deleteCell(index);
+                }
+            } else if (action === 'cycleGray') {
+                const bg = cell.style.backgroundColor;
+                cell.style.backgroundColor = (bg === '' || bg === 'transparent') ? '#f5f5f5' : (bg === 'rgb(245, 245, 245)' ? '#e0e0e0' : (bg === 'rgb(224, 224, 224)' ? '#bdbdbd' : ''));
+            } else if (action === 'deleteTable') {
+                if (confirm('¿Borrar toda la tabla?')) table.remove();
+            }
+            saveState();
+        }
+
+        function applyThemePreview() {
+            const colors = themes[document.getElementById('app-theme').value] || themes.lengua;
+            document.documentElement.style.setProperty('--preview-bg', colors.bg);
+            document.documentElement.style.setProperty('--preview-header', colors.header);
+        }
+        function triggerImageUpload() { openEditorImageGallery(); }
+        async function handleImageUpload(input) {
+            if (input.files && input.files[0]) {
+                galleryContext = 'editor';
+                await uploadFileToImages(input.files[0], true);
+            }
+            input.value = '';
+        }
+        function handleImageSelect(e) {
+            const editable = e.target.closest('[contenteditable="true"]');
+            if (editable) activeEditorElement = editable;
+            if(e.target.tagName==='IMG' && editable) {
+                selectEditableImage(e.target);
+                e.stopPropagation();
+            } else if (!e.target.closest('#image-resize-handle')) {
+                clearSelectedImage();
+            }
+        }
+
+        function selectEditableImage(img) {
+            if(selectedImage) selectedImage.classList.remove('selected-image');
+            selectedImage = img;
+            selectedImage.classList.add('selected-image');
+            updateImageResizeHandle();
+        }
+
+        function clearSelectedImage() {
+            if(selectedImage) selectedImage.classList.remove('selected-image');
+            selectedImage = null;
+            imageResizeState = null;
+            const handle = document.getElementById('image-resize-handle');
+            const label = document.getElementById('image-resize-label');
+            if (handle) handle.style.display = 'none';
+            if (label) label.style.display = 'none';
+        }
+
+        function updateImageResizeHandle() {
+            const handle = document.getElementById('image-resize-handle');
+            const label = document.getElementById('image-resize-label');
+            if (!handle || !label || !selectedImage || !document.body.contains(selectedImage)) {
+                if (handle) handle.style.display = 'none';
+                if (label) label.style.display = 'none';
+                return;
+            }
+            const r = selectedImage.getBoundingClientRect();
+            handle.style.left = (window.scrollX + r.right - 9) + 'px';
+            handle.style.top = (window.scrollY + r.bottom - 9) + 'px';
+            handle.style.display = 'block';
+            label.style.left = (window.scrollX + r.left) + 'px';
+            label.style.top = (window.scrollY + r.bottom + 10) + 'px';
+            label.style.display = 'block';
+        }
+
+        function startImageResize(e) {
+            if (!selectedImage) return;
+            e.preventDefault();
+            e.stopPropagation();
+            const r = selectedImage.getBoundingClientRect();
+            const parent = selectedImage.closest('[contenteditable="true"]') || selectedImage.parentElement;
+            const parentWidth = parent ? parent.getBoundingClientRect().width : 900;
+            imageResizeState = {
+                pointerId: e.pointerId,
+                startX: e.clientX,
+                startWidth: r.width,
+                maxWidth: Math.max(80, parentWidth - 20)
+            };
+            e.target.setPointerCapture?.(e.pointerId);
+        }
+
+        function handleImageResizeMove(e) {
+            if (!imageResizeState || !selectedImage) return;
+            e.preventDefault();
+            const delta = e.clientX - imageResizeState.startX;
+            let newWidth = imageResizeState.startWidth + delta;
+            newWidth = Math.max(40, Math.min(newWidth, imageResizeState.maxWidth));
+            selectedImage.style.width = Math.round(newWidth) + 'px';
+            selectedImage.style.maxWidth = '100%';
+            selectedImage.style.height = 'auto';
+            updateImageResizeHandle();
+        }
+
+        function stopImageResize(e) {
+            if (!imageResizeState) return;
+            imageResizeState = null;
+            saveState();
+            updateImageResizeHandle();
+        }
+
+        function handleEditorFocus(e) {
+            const editable = e.target.closest('[contenteditable="true"]');
+            if (editable) {
+                activeEditorElement = editable;
+                saveEditorSelection();
+            }
+        }
+        function handleEditorKeyup() { saveEditorSelection(); }
+        function handleEditorMouseup() { saveEditorSelection(); }
+
+        function generateExportCode() {
+            const appTitle = document.getElementById('app-title').value || "Actividades";
+            const themeColors = themes[document.getElementById('app-theme').value] || themes.lengua;
+            const layout = document.getElementById('hero-layout').value;
+            
+            let introHTML = "";
+            if(document.getElementById('show-intro').checked) {
+                const content = exportContentImages(document.getElementById('intro-editor').innerHTML);
+                if(content.trim()) introHTML = `<div id="app-intro">${content}</div>`;
+            }
+            
+            // CONSTRUCCIÓN DEL HERO PARA EXPORTACIÓN
+            let imgExp1 = heroImg1 ? `<img src="${exportImageSrc(heroImg1)}" alt="Mascota" style="max-height: 120px; width: auto; object-fit: contain; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.2));">` : '';
+            let imgExp2 = heroImg2 ? `<img src="${exportImageSrc(heroImg2)}" alt="Mascota" style="max-height: 120px; width: auto; object-fit: contain; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.2));">` : '';
+            if (layout === 'img-both' && !heroImg2 && heroImg1) imgExp2 = imgExp1;
+            
+            let textBlockExp = `<div><h1 style="margin: 0; font-size: 2.2rem; color: var(--title-color);">${appTitle}</h1></div>`;
+            let heroHtml = '';
+            
+            if (layout === 'img-left' && imgExp1) heroHtml = `<div style="display:flex; justify-content:center; align-items:center; gap:20px; flex-wrap:wrap;">${imgExp1}${textBlockExp}</div>`;
+            else if (layout === 'img-right' && imgExp1) heroHtml = `<div style="display:flex; justify-content:center; align-items:center; gap:20px; flex-wrap:wrap;">${textBlockExp}${imgExp1}</div>`;
+            else if (layout === 'img-both' && imgExp1) heroHtml = `<div style="display:flex; justify-content:center; align-items:center; gap:20px; flex-wrap:wrap;">${imgExp1}${textBlockExp}${imgExp2}</div>`;
+            else if (layout === 'img-top' && imgExp1) heroHtml = `<div style="display:flex; flex-direction:column; justify-content:center; align-items:center; gap:15px;">${imgExp1}${textBlockExp}</div>`;
+            else heroHtml = textBlockExp;
+
+            // PREPARAR CONTENIDO
+            let rawHTMLInjection = ""; const filesToZip = new Map(); let imgCounter = 1;
+            document.querySelectorAll('.editor-card').forEach(card => {
+                const title = card.querySelector('.card-header-input').value || "Sin Título";
+                const startOpen = card.querySelector('.card-start-open')?.checked ? '1' : '0';
+                const allowCopy = card.querySelector('.card-allow-copy')?.checked ? '1' : '0';
+                const allowPrint = card.querySelector('.card-allow-print')?.checked ? '1' : '0';
+                const allowEditor = card.querySelector('.card-allow-editor')?.checked ? '1' : '0';
+                let contentHTML = exportContentImages(card.querySelector('.card-content-editor').innerHTML);
+                const doc = new DOMParser().parseFromString(contentHTML, 'text/html');
+                doc.querySelectorAll('img').forEach(img => {
+                    img.classList.remove('selected-image'); img.style.outline = '';
+                });
+                rawHTMLInjection += `<table data-open="${startOpen}" data-copy="${allowCopy}" data-print="${allowPrint}" data-editor="${allowEditor}"><tr><td>${title}</td></tr><tr><td>${doc.body.innerHTML.replace(/<hr[^>]*>/gi, '<div style="border-top:1px solid #ccc; margin:10px 0;"></div>')}</td></tr></table><hr>`;
+            });
+            
+            const navHTML = getNavbarHTML();
+            const navSpacer = navHTML ? '<div style="height: 24px;"></div>' : '';
+            
+            const projectStateJSON = JSON.stringify(collectProjectState()).replace(/</g, '\\u003c');
+            let finalCode = TEMPLATE_HTML
+                .replace(/\{\{PAGE_TITLE\}\}/g, appTitle)
+                .replace('{{THEME_BG}}', themeColors.bg)
+                .replace('{{THEME_HEADER}}', themeColors.header)
+                .replace('{{THEME_TITLE}}', themeColors.title)
+                .replace('{{NAV_BAR}}', navHTML)
+                .replace('{{NAV_SPACER}}', navSpacer)
+                .replace('{{EDITOR_URL}}', getEditorURLForExport())
+                .replace('{{HERO_BLOCK}}', heroHtml)
+                .replace('{{INTRO_BLOCK}}', introHTML)
+                .replace('{{PROJECT_STATE_JSON}}', projectStateJSON)
+                .replace('{{RAW_CONTENT_INJECTION}}', rawHTMLInjection);
+                
+            return { code: finalCode, files: filesToZip };
+        }
+
+        function stripAnalytics(code) {
+            return code.replace(/<script async src="https:\/\/www\.googletagmanager\.com[\s\S]*?<\/script>\s*<script>[\s\S]*?gtag\('config'[\s\S]*?<\/script>/, '');
+        }
+        function exportWebAppAsSingleHtml(isPreview = false) {
+            previewMode = !!isPreview;
+            let code;
+            try { code = generateExportCode().code; } finally { previewMode = false; }
+            if (isPreview) {
+                const win = window.open();
+                if (!win) { alert('El navegador bloqueó la vista previa. Permití ventanas emergentes.'); return; }
+                win.document.write(stripAnalytics(code)); win.document.close();
+                return;
+            }
+            Instalacion.savePublish(htmlFilename(), code);
+        }
+        function previewWebApp() { exportWebAppAsSingleHtml(true); }
+
+        function exportWebAppAsZip() {
+            const cards = document.querySelectorAll('.editor-card'); if (cards.length === 0) { alert("Agrega al menos una ficha."); return; }
+            let folderName = prompt("Nombre de carpeta de imágenes:", "images"); if (!folderName) return; folderName = folderName.replace(/[^a-zA-Z0-9_\-]/g, '') || "images";
+            let { code } = generateExportCode(); const zip = new JSZip(); const imgFolder = zip.folder(folderName);
+            const doc = new DOMParser().parseFromString(code, 'text/html');
+            
+            // ZIP: conserva Base64 antiguas. Las imágenes nuevas de /images/ quedan enlazadas por ruta.
+            doc.querySelectorAll('img').forEach((img, index) => {
+                if (img.src.startsWith('data:image')) {
+                    const blob = dataURItoBlob(img.src); const filename = `img_${index+1}.${img.src.includes('jpeg') ? 'jpg' : 'png'}`;
+                    imgFolder.file(filename, blob); img.src = `${folderName}/${filename}`;
+                }
+            });
+            
+            const safeTitle = document.getElementById('app-title').value.replace(/[^a-zA-Z0-9]/g, '_');
+            zip.file(`${safeTitle}.html`, doc.documentElement.outerHTML);
+            zip.generateAsync({type:"blob"}).then(c => { const a = document.createElement('a'); a.href = URL.createObjectURL(c); a.download = `${safeTitle}_fichas_v12_nombre_fijo_sin_numeracion.zip`; document.body.appendChild(a); a.click(); document.body.removeChild(a); });
+        }
+
+        function dataURItoBlob(dataURI) {
+            var byteString = atob(dataURI.split(',')[1]); var mimeString = dataURI.split(',')[0].split(':')[1].split(';')[0];
+            var ab = new ArrayBuffer(byteString.length); var ia = new Uint8Array(ab);
+            for (var i = 0; i < byteString.length; i++) { ia[i] = byteString.charCodeAt(i); }
+            return new Blob([ab], {type: mimeString});
+        }
+        
+        function importProjectText(content, name) {
+            if (!Instalacion.acceptKind(content, name, 'fichas')) return;
+            const isJson = /\.json$/i.test(name || '') || String(content).trim().startsWith('{');
+            if (isJson) {
+                try {
+                    applyProjectState(JSON.parse(content));
+                    if (name && document.getElementById('cloud-json-filename')) {
+                        document.getElementById('cloud-json-filename').value = normalizeCloudFilename(name);
+                        saveState();
+                    }
+                    Instalacion.toast('✅ Borrador abierto: ' + (name || ''));
+                } catch (err) {
+                    console.error(err);
+                    alert("No se pudo importar el JSON. Revisá que sea un borrador de este constructor.");
+                }
+            } else {
+                reconstructProject(content);
+            }
+        }
+        function triggerImport() { document.getElementById('import-file-input').click(); }
+        function importFromURL() { Instalacion.importFromURL({ onOpen: (text, name) => importProjectText(text, name) }); }
+        function handleImport(input) {
+            const file = input.files[0];
+            if (!file || !confirm("Se reemplazará el trabajo actual. ¿Continuar?")) { input.value = ''; return; }
+            const reader = new FileReader();
+            reader.onload = e => importProjectText(String(e.target.result), file.name);
+            reader.readAsText(file);
+            input.value = '';
+        }
+
+        // --- FUNCIÓN DE IMPORTACIÓN MEJORADA (RETROCOMPATIBILIDAD) ---
+        function reconstructProject(htmlContent) {
+            const doc = new DOMParser().parseFromString(htmlContent, 'text/html');
+
+            const stateNode = doc.getElementById('constructor-fichas-state');
+            if (stateNode && stateNode.textContent.trim()) {
+                try {
+                    applyProjectState(JSON.parse(stateNode.textContent));
+                    alert("✅ Página importada con configuración completa.");
+                    return;
+                } catch (e) {
+                    console.warn("No se pudo leer el respaldo JSON embebido. Se intentará reconstrucción compatible.", e);
+                }
+            }
+            
+            // 1. Rescatar el Título
+            const h1 = doc.querySelector('h1');
+            document.getElementById('app-title').value = h1 ? h1.innerText.trim() : "Ficha Importada";
+
+            // 2. Rescatar el Color (Deducción por código hexadecimal en el style viejo)
+            const styles = Array.from(doc.querySelectorAll('style')).map(s => s.innerHTML.toUpperCase());
+            let foundTheme = "lengua";
+            if (styles.some(s => s.includes('#E67E22'))) foundTheme = "matematica";
+            if (styles.some(s => s.includes('#27AE60'))) foundTheme = "lengua";
+            if (styles.some(s => s.includes('#D31718'))) foundTheme = "diseno";
+            if (styles.some(s => s.includes('#036FB0'))) foundTheme = "recursos";
+            document.getElementById('app-theme').value = foundTheme;
+            applyThemePreview();
+
+            // 3. Rescatar la Introducción
+            const intro = doc.getElementById('app-intro');
+            document.getElementById('intro-editor').innerHTML = intro ? intro.innerHTML : "";
+            document.getElementById('show-intro').checked = !!intro; toggleIntro();
+
+            // Resetear Mascotas y Barra de Navegación por defecto
+            heroImg1 = ""; heroImg2 = "";
+            document.getElementById('hero-layout').value = "center";
+            document.getElementById('app-navbar').value = "volver";
+            if (document.getElementById('app-output-location')) document.getElementById('app-output-location').value = "subfolder";
+            document.getElementById('volver-text').value = "Textos";
+
+            // 4. Rescatar las Tablas / Fichas
+            document.getElementById('cards-container').innerHTML = '';
+            const rawPH = doc.getElementById('raw-content-placeholder');
+            const chunks = (rawPH ? rawPH.innerHTML : Array.from(doc.querySelectorAll('body > table')).map(t => t.outerHTML + "<hr>").join('')).split(/<hr[^>]*>/i);
+            
+            let hasCards = false;
+            chunks.forEach(c => {
+                if (!c.trim()) return; 
+                const t = document.createElement('div'); t.innerHTML = c; 
+                const tbl = t.querySelector('table');
+                if (tbl && tbl.rows.length >= 2) {
+                    createEditorCard(
+                        tbl.rows[0].innerText.trim(),
+                        tbl.rows[1].querySelector('td') ? tbl.rows[1].querySelector('td').innerHTML : tbl.rows[1].innerHTML,
+                        {
+                            startOpen: tbl.dataset.open === '1',
+                            allowCopy: tbl.dataset.copy !== '0',
+                            allowPrint: tbl.dataset.print !== '0',
+                            allowEditor: tbl.dataset.editor !== '0'
+                        }
+                    );
+                    hasCards = true;
+                }
+            });
+            if (!hasCards) createEditorCard();
+
+            saveState(); 
+            renderHeroPreview();
+            toggleVolverInput();
+            toggleMascotButtons();
+            alert("✅ Ficha antigua importada.\n\nEl texto y las tarjetas fueron rescatados.\nAplicá el diseño de barra y las mascotas desde el panel superior.");
+        }
+    </script>
+</body>
+</html>
