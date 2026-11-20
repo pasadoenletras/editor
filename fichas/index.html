@@ -657,8 +657,6 @@
         .header-actions { display: flex; align-items: center; gap: 10px; }
         .btn-send-editor { background: rgba(255,255,255,0.2); border: none; color: white; width: 32px; height: 32px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; transition: background 0.2s; text-decoration: none; }
         .btn-send-editor:hover { background: rgba(255,255,255,0.4); transform: scale(1.1); }
-        .btn-toggle-card { background: rgba(255,255,255,0.22); border: 1px solid rgba(255,255,255,.45); color: white; border-radius: 999px; padding: 7px 10px; cursor: pointer; font-weight: 900; display: inline-flex; align-items: center; gap: 5px; white-space: nowrap; }
-        .btn-toggle-card:hover { background: rgba(255,255,255,0.34); transform: translateY(-1px); }
         .custom-checkbox { width: 28px; height: 28px; background: white; border-radius: 6px; display: flex; align-items: center; justify-content: center; cursor: pointer; border: 2px solid rgba(255,255,255,0.6); }
         .ficha-card.selected-for-print .custom-checkbox { background: var(--accent-color); border-color: white; }
         .custom-checkbox::after { content: '✓'; color: white; font-weight: 900; font-size: 18px; display: none; }
@@ -698,6 +696,28 @@
             .ficha-body table { table-layout: auto !important; }
         }
     </style>
+    <style>
+        /* Bandoneones sutiles (mismo estilo que la portada): bordes finos, color solo en títulos y flechas */
+        @media screen {
+            .ficha-card { --borde: #d9dde3; --borde: color-mix(in srgb, var(--header-color) 28%, #fff); border: 1px solid var(--borde); border-radius: 12px; box-shadow: none; transition: border-color .15s, box-shadow .15s, transform .15s; }
+            .ficha-card:hover { transform: translateY(-1px); border-color: var(--header-color); }
+            .ficha-card.selected-for-print { border-color: var(--accent-color); box-shadow: 0 0 0 3px rgba(255, 112, 67, 0.18); }
+            .ficha-header { background-color: var(--card-bg); padding: 12px 14px; gap: 10px; }
+            .ficha-header::before { content: "▸"; color: var(--header-color); display: inline-block; transition: transform .2s; }
+            .ficha-card.open .ficha-header::before { transform: rotate(90deg); }
+            .ficha-card.open .ficha-header { border-bottom: 1px solid var(--borde); }
+            .ficha-title { color: var(--title-color); font-weight: 650; font-size: 1.05rem; }
+            .btn-send-editor { background: rgba(0, 0, 0, 0.06); background: color-mix(in srgb, var(--header-color) 14%, transparent); color: var(--title-color); }
+            .btn-send-editor:hover { background: color-mix(in srgb, var(--header-color) 26%, transparent); transform: scale(1.08); }
+            .custom-checkbox { border: 2px solid var(--borde); transition: border-color .15s; }
+            .custom-checkbox:hover { border-color: var(--header-color); }
+            .ficha-card.selected-for-print .custom-checkbox { border-color: var(--accent-color); }
+            .ficha-card.open .ficha-body { animation: fichaAbre .25s ease-out; }
+            @keyframes fichaAbre { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: none; } }
+        }
+        @media print { .ficha-header::before { display: none !important; } }
+        @media (prefers-reduced-motion: reduce) { .ficha-card, .ficha-card.open .ficha-body { animation: none; transition: none; } }
+    </style>
 </head>
 <body>
     {{NAV_BAR}}
@@ -707,7 +727,7 @@
             {{HERO_BLOCK}}
         </div>
         <p style="text-align: center; margin-bottom: 5px; color: #607D8B; font-size: 0.95rem;">
-            <small>Presionar <span style="background: rgba(0,0,0,0.05); border-radius: 50%; padding: 2px 6px;">▸ Abrir</span> para desplegar la ficha o <span style="background: rgba(0,0,0,0.05); border-radius: 50%; padding: 2px 6px;">↗️</span> para editarla</small>
+            <small>Presionar el título para desplegar la ficha o <span style="background: rgba(0,0,0,0.05); border-radius: 50%; padding: 2px 6px;">↗️</span> para editarla</small>
         </p>
         <p style="text-align: center; margin-bottom: 35px; color: #607D8B; font-size: 0.95rem;">
             <small>Marcar la casilla y luego 📋 para copiar la actividad o 🖨️ para imprimir o exportar a .PDF</small>
@@ -779,12 +799,6 @@
                 btnEdit.onclick = (e) => { e.stopPropagation(); sendToEditor(title, content); };
                 actionsDiv.appendChild(btnEdit);
             }
-            const btnToggle = document.createElement('button');
-            btnToggle.className = 'btn-toggle-card';
-            btnToggle.type = 'button';
-            btnToggle.innerText = settings.startOpen ? '▾ Cerrar' : '▸ Abrir';
-            btnToggle.onclick = (e) => { e.stopPropagation(); toggleCard(card); };
-            actionsDiv.appendChild(btnToggle);
             if (settings.allowCopy || settings.allowPrint) {
                 const checkbox = document.createElement('div'); checkbox.className = 'custom-checkbox'; checkbox.title = 'Seleccionar ficha';
                 checkbox.onclick = (e) => { e.stopPropagation(); toggleSelection(card); };
@@ -805,8 +819,6 @@
         }
         function toggleCard(card) {
             card.classList.toggle('open');
-            const btn = card.querySelector('.btn-toggle-card');
-            if (btn) btn.innerText = card.classList.contains('open') ? '▾ Cerrar' : '▸ Abrir';
         }
         function toggleSelection(card) { card.classList.toggle('selected-for-print'); updateFabState(); }
         function clearSelection() { document.querySelectorAll('.ficha-card.selected-for-print').forEach(c => c.classList.remove('selected-for-print')); updateFabState(); }
