@@ -42,37 +42,35 @@ body{
 #app-container{max-width:1180px;margin:0 auto}
 .topbar{
     background:var(--surface);
-    border-top:5px solid var(--header);
-    border-radius:13px;
-    box-shadow:0 4px 14px rgba(0,0,0,.10);
-    padding:10px 12px;
-    margin-bottom:10px;
+    border-top:3px solid var(--header);
+    border-radius:11px;
+    box-shadow:0 3px 10px rgba(0,0,0,.10);
+    padding:7px 10px;
+    margin-bottom:8px;
+    display:flex;
+    flex-direction:column;
+    gap:6px;
 }
-.config-grid{
-    display:grid;
-    grid-template-columns:minmax(280px,2fr) minmax(170px,.85fr) auto;
-    gap:8px;
-    align-items:end;
+.top-row{display:flex;flex-wrap:wrap;align-items:center;gap:6px}
+.top-row.sub{justify-content:space-between}
+.top-input{
+    border:1px solid #CFD8DC; border-radius:8px; padding:4px 8px; min-height:32px;
+    font-family:'Nunito',Arial,sans-serif; font-size:.88rem; background:white; color:inherit;
 }
+#doc-title{flex:2 1 220px;min-width:160px;font-weight:800}
+#doc-filename{flex:1 1 150px;min-width:120px;color:#546E7A}
+#margin-preset{flex:0 0 auto}
 .field label{display:block;font-size:.76rem;font-weight:800;color:#546E7A;margin-bottom:2px;line-height:1.1}
 .field input,.field select{
     width:100%; border:1px solid #CFD8DC; border-radius:8px; padding:6px 8px;
     font-family:'Nunito',Arial,sans-serif; font-size:.9rem; background:white; min-height:34px;
 }
-.compact-actions{display:flex;gap:6px;align-items:end;justify-content:flex-end;white-space:nowrap}
+.compact-actions{display:flex;gap:4px;align-items:center;white-space:nowrap;margin-left:auto}
 .icon-action{
-    width:34px;height:34px;border:1px solid #CFD8DC;border-radius:8px;background:white;color:#455A64;
-    cursor:pointer;display:inline-flex;align-items:center;justify-content:center;font-size:18px;font-weight:800;
+    width:32px;height:32px;border:1px solid #CFD8DC;border-radius:8px;background:white;color:#455A64;
+    cursor:pointer;display:inline-flex;align-items:center;justify-content:center;font-size:16px;font-weight:800;
 }
 .icon-action:hover{background:#E3F2FD;border-color:#29B6F6;color:#01579B;transform:translateY(-1px)}
-.margin-row{
-    margin-top:7px;
-    display:flex;
-    align-items:center;
-    gap:8px;
-    flex-wrap:wrap;
-}
-.margin-row .field{min-width:220px;max-width:320px;flex:0 1 280px}
 .margin-panel{
     display:none;
     align-items:center;
@@ -81,7 +79,7 @@ body{
     background:#F5F7FA;
     border:1px solid #CFD8DC;
     border-radius:10px;
-    padding:5px 7px;
+    padding:2px 6px;
 }
 .margin-mini{
     display:flex;
@@ -92,7 +90,7 @@ body{
 }
 .margin-mini input{
     width:58px;
-    min-height:30px;
+    min-height:28px;
     padding:4px 6px;
     border:1px solid #CFD8DC;
     border-radius:8px;
@@ -100,11 +98,16 @@ body{
     font-size:.9rem;
 }
 .status{
-    font-size:.78rem; color:#546E7A; padding:6px 0 0; display:flex; gap:6px; flex-wrap:wrap; align-items:center;
+    font-size:.74rem; color:#546E7A; padding:0; display:flex; gap:5px; flex-wrap:wrap; align-items:center;
 }
-.badge{background:#ECEFF1;border-radius:999px;padding:3px 8px;font-weight:800;line-height:1.2}
+.badge{background:#ECEFF1;border-radius:999px;padding:2px 8px;font-weight:800;line-height:1.2;cursor:default;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .badge.ok{background:#E8F5E9;color:#2E7D32}
 .badge.warn{background:#FFF3E0;color:#EF6C00}
+/* Barra de carpeta de instalacion.js, compacta: el texto largo queda como ayuda al pasar el mouse */
+.topbar .inst-bar{flex:0 1 auto;flex-wrap:nowrap;gap:6px;padding:2px 6px;margin:0;border-radius:8px;font-size:.78rem}
+.topbar .inst-bar::before{content:'📁'}
+.topbar .inst-bar .inst-txt{display:none}
+.topbar .inst-bar .inst-btn{padding:3px 9px;font-size:.76rem}
 
 .main-toolbar{
     position:sticky; top:10px; z-index:900;
@@ -126,20 +129,65 @@ body{
 }
 .separator{width:1px;height:26px;background:#78909C;margin:0 3px}
 
-.canvas-stage{display:flex; justify-content:center; align-items:flex-start; width:100%}
-.canvas-shell{
-    width:min(100%, 210mm);
-    position:relative;
+.canvas-stage{
+    display:flex;
+    align-items:flex-start;
+    background:#CBD3DA;
+    border-radius:12px;
+    padding:26px 16px 34px;
     overflow-x:auto;
 }
-.doc-canvas{
+/* El ancho de la hoja es fijo (A4): si la pantalla es más angosta, el escenario se desplaza. */
+.canvas-shell{
+    position:relative;
+    flex:none;
     width:210mm;
-    max-width:100%;
-    min-height:297mm;
+    margin:0 auto;
+    display:flow-root;
+}
+/* Hojas A4 dibujadas detrás del texto */
+.page-sheet-layer{
+    position:absolute;
+    left:0;
+    top:0;
+    width:100%;
+    z-index:0;
+    pointer-events:none;
+}
+.page-sheet{
+    position:absolute;
+    left:0;
+    width:100%;
     background:white;
-    margin:0 auto 24px;
-    box-shadow:0 5px 18px rgba(0,0,0,.18);
-    border:1px solid #E0E0E0;
+    box-shadow:0 1px 3px rgba(0,0,0,.22), 0 6px 18px rgba(0,0,0,.16);
+}
+.page-sheet-num{
+    position:absolute;
+    right:2px;
+    top:100%;
+    margin-top:4px;
+    font-size:.7rem;
+    font-weight:800;
+    color:#5F6F7A;
+}
+/* Cortes de página: flotantes invisibles que reservan el margen inferior, el hueco entre hojas
+   y el margen superior de la hoja siguiente. El texto fluye alrededor renglón por renglón,
+   sin tocar el contenido editable (no se rompe Deshacer ni se guarda nada extra). */
+.page-flow{height:0}
+.page-float{
+    display:block;
+    float:left;
+    clear:both;
+    width:100%;
+    visibility:hidden;
+    pointer-events:none;
+}
+.doc-canvas{
+    width:100%;
+    min-height:297mm;
+    background:transparent;
+    margin:0;
+    border:0;
     padding:var(--m-top) var(--m-right) var(--m-bottom) var(--m-left);
     outline:none;
     line-height:1.5;
@@ -151,6 +199,8 @@ body{
     -webkit-print-color-adjust:exact;
     print-color-adjust:exact;
 }
+/* Los bloques rígidos se mueven enteros a la hoja siguiente */
+.doc-canvas .doc-lines{display:flow-root}
 .doc-canvas:empty:before{content:'Escribí aquí...';color:#B0BEC5;pointer-events:none}
 .doc-canvas img{
     max-width:100%;
@@ -178,60 +228,6 @@ body{
 .doc-canvas p,.doc-canvas div,.doc-canvas h1,.doc-canvas h2,.doc-canvas h3,.doc-canvas h4,.doc-canvas ul,.doc-canvas ol,.doc-canvas li{
     margin-top:0!important;
     margin-bottom:0!important;
-}
-.page-marker-layer{
-    position:absolute;
-    left:0;
-    top:0;
-    width:210mm;
-    max-width:100%;
-    pointer-events:none;
-    z-index:5;
-}
-.page-marker{
-    position:absolute;
-    left:0;
-    right:0;
-    border-top:2px dashed rgba(211,47,47,.7);
-}
-.page-marker::before{
-    content:'';
-    position:absolute;
-    left:0;
-    right:0;
-    top:0;
-    height:var(--m-bottom);
-    background:rgba(255,235,238,.28);
-}
-.page-marker span{
-    position:absolute;
-    right:8px;
-    top:-15px;
-    background:#FFEBEE;
-    color:#B71C1C;
-    border:1px solid #EF9A9A;
-    border-radius:999px;
-    padding:2px 8px;
-    font-size:.72rem;
-    font-weight:800;
-}
-.page-physical-marker{
-    position:absolute;
-    left:0;
-    right:0;
-    border-top:1px dotted rgba(120,144,156,.65);
-}
-.page-physical-marker span{
-    position:absolute;
-    left:8px;
-    top:-13px;
-    background:#ECEFF1;
-    color:#455A64;
-    border:1px solid #CFD8DC;
-    border-radius:999px;
-    padding:1px 7px;
-    font-size:.68rem;
-    font-weight:800;
 }
 .manual-page-break{
     height:0;
@@ -431,32 +427,33 @@ body.tbl-resizing-row, body.tbl-resizing-row *{user-select:none!important;cursor
 
 @media (max-width:900px){
     body{padding:10px}
-    .config-grid{grid-template-columns:1fr}
-    .compact-actions{justify-content:flex-start}
-    .margin-row{align-items:stretch}
-    .margin-row .field{max-width:none;flex:1 1 100%}
+    .compact-actions{margin-left:0}
     .margin-panel{width:100%}
-    .canvas-shell{width:100%}
 }
 @media print{
     *{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}
     body{background:white;padding:0;margin:0}
-    .topbar,.main-toolbar,.modal-overlay,#table-floating-menu,#emoji-popup,#color-popup,#quick-block-popup,#response-popup,#img-resize-handle,#img-resize-label,#img-delete-btn,#img-context-menu,#block-bar,.page-marker-layer{display:none!important}
+    .topbar,.main-toolbar,.modal-overlay,#table-floating-menu,#emoji-popup,#color-popup,#quick-block-popup,#response-popup,#img-resize-handle,#img-resize-label,#img-delete-btn,#img-context-menu,#block-bar,.page-sheet-layer,.page-flow{display:none!important}
     .block-active{outline:none!important}
     .doc-lines:hover{outline:none!important}
     #app-container{max-width:none;margin:0}
-    .canvas-stage{display:block}
-    .canvas-shell{width:auto;overflow:visible}
+    .canvas-stage{display:block;background:none;padding:0;border-radius:0;overflow:visible}
+    .canvas-shell{width:auto;margin:0;display:block}
     .doc-canvas{
         width:auto;
         max-width:none;
-        min-height:auto;
+        min-height:auto!important;
         box-shadow:none;
         border:none;
         margin:0;
         padding:0;
         overflow:visible;
     }
+    /* En pantalla los bloques rígidos pasan enteros a la hoja siguiente; en papel igual.
+       Los párrafos se parten por renglón, como en pantalla. */
+    .doc-canvas table,.doc-canvas .doc-lines,.doc-canvas img,.doc-canvas tr{break-inside:avoid}
+    .doc-canvas h1,.doc-canvas h2,.doc-canvas h3,.doc-canvas h4,.doc-canvas h5,.doc-canvas h6{break-after:avoid}
+    .doc-canvas p,.doc-canvas li,.doc-canvas div{orphans:1;widows:1}
     .manual-page-break{border:0!important;margin:0!important;height:0!important;break-after:page;page-break-after:always}
     .manual-page-break:after{display:none!important}
 }
@@ -466,14 +463,21 @@ body.tbl-resizing-row, body.tbl-resizing-row *{user-select:none!important;cursor
 
 <div id="app-container">
     <section class="topbar">
-        <div class="config-grid compact-config">
-            <div class="field">
-                <label>Título</label>
-                <input type="text" id="doc-title" value="Documento sin título" oninput="updateFilenameFromTitle(false); triggerSave()">
-            </div>
-            <div class="field">
-                <label>Archivo JSON</label>
-                <input type="text" id="doc-filename" value="documento.json" data-edited="0" oninput="triggerSave()">
+        <div class="top-row">
+            <input type="text" id="doc-title" class="top-input" value="Documento sin título" placeholder="Título del documento" title="Título del documento" aria-label="Título del documento" oninput="updateFilenameFromTitle(false); triggerSave()">
+            <input type="text" id="doc-filename" class="top-input" value="documento.json" data-edited="0" title="Nombre del archivo JSON. Se arma solo con el título; podés cambiarlo." aria-label="Nombre del archivo JSON" oninput="triggerSave()">
+            <select id="margin-preset" class="top-input" title="Márgenes de la hoja A4" aria-label="Márgenes de la hoja A4" onchange="applyMarginPreset(this.value); triggerSave()">
+                <option value="all1" selected>Márgenes: todos 1 cm</option>
+                <option value="all2">Márgenes: todos 2 cm</option>
+                <option value="v1h2">Márgenes: arr./ab. 1 · lados 2 cm</option>
+                <option value="v2h1">Márgenes: arr./ab. 2 · lados 1 cm</option>
+                <option value="custom">Márgenes: personalizados</option>
+            </select>
+            <div class="margin-panel" id="custom-margin-panel" aria-label="Márgenes personalizados">
+                <label class="margin-mini" title="Superior">↑ <input type="number" id="margin-top" value="1" min="0.5" max="3" step="0.1" oninput="applyCustomMargins(); triggerSave()"></label>
+                <label class="margin-mini" title="Derecho">→ <input type="number" id="margin-right" value="1" min="0.5" max="3" step="0.1" oninput="applyCustomMargins(); triggerSave()"></label>
+                <label class="margin-mini" title="Inferior">↓ <input type="number" id="margin-bottom" value="1" min="0.5" max="3" step="0.1" oninput="applyCustomMargins(); triggerSave()"></label>
+                <label class="margin-mini" title="Izquierdo">← <input type="number" id="margin-left" value="1" min="0.5" max="3" step="0.1" oninput="applyCustomMargins(); triggerSave()"></label>
             </div>
             <div class="compact-actions" aria-label="Acciones del documento">
                 <button class="icon-action" onclick="newDocument()" title="Nuevo documento" aria-label="Nuevo documento">📄</button>
@@ -481,29 +485,13 @@ body.tbl-resizing-row, body.tbl-resizing-row *{user-select:none!important;cursor
                 <button class="icon-action" onclick="openDocuments()" title="Abrir un borrador" aria-label="Abrir">📂</button>
             </div>
         </div>
-        <div class="margin-row">
-            <div class="field">
-                <label>Márgenes A4</label>
-                <select id="margin-preset" onchange="applyMarginPreset(this.value); triggerSave()">
-                    <option value="all1" selected>Todos 1 cm</option>
-                    <option value="all2">Todos 2 cm</option>
-                    <option value="v1h2">Arr./ab. 1 cm · lados 2 cm</option>
-                    <option value="v2h1">Arr./ab. 2 cm · lados 1 cm</option>
-                    <option value="custom">Personalizado</option>
-                </select>
+        <div class="top-row sub">
+            <div class="inst-bar" id="instStatus"></div>
+            <div class="status">
+                <span id="save-msg" class="badge ok" title="Guardado automático en este navegador">🟢 Local</span>
+                <span id="cloud-msg" class="badge" title="Archivo guardado en la carpeta conectada">📁 Sin guardar</span>
+                <span id="page-count-msg" class="badge" title="Página donde está el cursor y total de hojas A4">📄 1 página A4</span>
             </div>
-            <div class="margin-panel" id="custom-margin-panel" aria-label="Márgenes personalizados">
-                <label class="margin-mini" title="Superior">↑ <input type="number" id="margin-top" value="1" min="0.5" max="3" step="0.1" oninput="applyCustomMargins(); triggerSave()"></label>
-                <label class="margin-mini" title="Derecho">→ <input type="number" id="margin-right" value="1" min="0.5" max="3" step="0.1" oninput="applyCustomMargins(); triggerSave()"></label>
-                <label class="margin-mini" title="Inferior">↓ <input type="number" id="margin-bottom" value="1" min="0.5" max="3" step="0.1" oninput="applyCustomMargins(); triggerSave()"></label>
-                <label class="margin-mini" title="Izquierdo">← <input type="number" id="margin-left" value="1" min="0.5" max="3" step="0.1" oninput="applyCustomMargins(); triggerSave()"></label>
-            </div>
-        </div>
-        <div class="inst-bar" id="instStatus"></div>
-        <div class="status">
-            <span id="save-msg" class="badge ok">🟢 Local</span>
-            <span id="cloud-msg" class="badge">📁 Sin guardar</span>
-            <span id="page-count-msg" class="badge">📄 1 pág. A4 aprox.</span>
         </div>
     </section>
 
@@ -545,9 +533,9 @@ body.tbl-resizing-row, body.tbl-resizing-row *{user-select:none!important;cursor
         <button class="tool-btn" onmousedown="event.preventDefault(); saveSelection(); openImageGallery()">🖼️ Galería</button>
         <button class="tool-btn" onmousedown="event.preventDefault(); saveSelection(); triggerLocalImage()" title="Copia la imagen a images/ y la inserta">📷 PC</button>
         <div class="separator"></div>
-        <button class="tool-btn" onclick="openTableModal('insert')"><span class="material-icons">grid_on</span> Tabla</button>
-        <button class="tool-btn" onclick="openTableActionsMenu()" title="Colores, columnas, filas, unir celdas">⚙️ Tabla</button>
-        <button class="tool-btn" onclick="openTableModal('format')" title="Bordes, ancho y encabezados de toda la tabla">🎨 Estilo</button>
+        <button class="tool-btn" onclick="openTableModal('insert')" title="Insertar una tabla nueva"><span class="material-icons">grid_on</span> Insertar tabla</button>
+        <button class="tool-btn table-menu-trigger" onclick="openTableActionsMenu()" title="Con el cursor dentro de una tabla: color de celda, filas, columnas, unir celdas">⚙️ Celdas</button>
+        <button class="tool-btn" onclick="openTableModal('format')" title="Con el cursor dentro de una tabla: bordes, ancho y encabezados de toda la tabla">🎨 Estilo tabla</button>
         <div class="separator"></div>
         <button class="tool-btn" onclick="insertPageBreak()">Salto página</button>
         <button class="tool-btn" onclick="exportCleanHTML()" title="Guarda el HTML en publicar/">HTML limpio</button>
@@ -557,7 +545,8 @@ body.tbl-resizing-row, body.tbl-resizing-row *{user-select:none!important;cursor
 
     <main class="canvas-stage">
         <div class="canvas-shell" id="canvas-shell">
-            <div class="page-marker-layer" id="page-marker-layer"></div>
+            <div class="page-sheet-layer" id="page-marker-layer"></div>
+            <div class="page-flow" id="page-flow" aria-hidden="true"></div>
             <article id="doc-canvas" class="doc-canvas" contenteditable="true"
                 onfocus="activeEditor=this"
                 oninput="triggerSave(); updatePageMarkersSoon()"
@@ -797,7 +786,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     document.addEventListener('click', e => {
-        if (!e.target.closest('#table-floating-menu') && !e.target.closest('td') && !e.target.closest('th')) document.getElementById('table-floating-menu').style.display = 'none';
+        if (!e.target.closest('#table-floating-menu') && !e.target.closest('td') && !e.target.closest('th') && !e.target.closest('.table-menu-trigger')) document.getElementById('table-floating-menu').style.display = 'none';
         if (!e.target.closest('#emoji-popup') && !e.target.closest('.btn-emoji')) document.getElementById('emoji-popup').style.display = 'none';
         if (!e.target.closest('#color-popup') && !e.target.closest('.btn-color')) document.getElementById('color-popup').style.display = 'none';
         if (!e.target.closest('#quick-block-popup') && !e.target.closest('.quick-trigger')) document.getElementById('quick-block-popup').style.display = 'none';
@@ -814,6 +803,9 @@ document.addEventListener('DOMContentLoaded', () => {
     document.addEventListener('pointermove', handleImageResizeMove);
     document.addEventListener('pointerup', stopImageResize);
     window.addEventListener('resize', updatePageMarkersSoon);
+    document.addEventListener('selectionchange', updatePageIndicatorSoon);
+    document.getElementById('doc-canvas').addEventListener('load', updatePageMarkersSoon, true); // imágenes que terminan de cargar
+    if (document.fonts && document.fonts.ready) document.fonts.ready.then(updatePageMarkersSoon);
     window.addEventListener('resize', updateImageResizeHandle);
     window.addEventListener('scroll', updateImageResizeHandle, true);
 });
@@ -856,6 +848,12 @@ function updateFilenameFromTitle(force){
     Instalacion.configure({ kind: 'editor' });
     await Instalacion.init();
     Instalacion.mountStatus('instStatus');
+    (function(){ // el texto largo de la carpeta se muestra como ayuda al pasar el mouse
+        const bar = document.getElementById('instStatus');
+        const sync = () => { const t = bar.querySelector('.inst-txt'); bar.title = t ? t.textContent : ''; };
+        new MutationObserver(sync).observe(bar, {childList:true});
+        sync();
+    })();
     Instalacion.onChange(rehydrateImages);
     document.addEventListener('keydown', e => {
         if ((e.ctrlKey || e.metaKey) && String(e.key).toLowerCase() === 's'){ e.preventDefault(); saveDocument(); }
@@ -978,40 +976,118 @@ function updatePageMarkersSoon(){
     clearTimeout(pageMarkerTimeout);
     pageMarkerTimeout = setTimeout(updatePageMarkers, 80);
 }
+/* Paginación: hojas A4 visibles + texto que fluye de una hoja a la otra.
+   Se mide el documento y, en cada fin de hoja, se agrega un flotante invisible (.page-float) fuera del
+   contenido editable. Los renglones y bloques que no entran quedan debajo de ese flotante. */
+const PAGE_GAP_PX = 24;
+let pageLayout = {pages:1, period:0, base:0};
+
+function pageRigidTall(canvas, contentH){
+    // tablas, renglones e imágenes que el navegador no puede partir por renglón y son más altos que una hoja
+    return Array.from(canvas.querySelectorAll('table, .doc-lines, img')).filter(el => el.getBoundingClientRect().height > contentH);
+}
 function updatePageMarkers(){
     const canvas = document.getElementById('doc-canvas');
+    const flow = document.getElementById('page-flow');
     const layer = document.getElementById('page-marker-layer');
-    const pageHeight = pxForCssLength('297mm');
-    const topMargin = pxForCssLength((margins.top || 1) + 'cm');
-    const bottomMargin = pxForCssLength((margins.bottom || 1) + 'cm');
-    const printableHeight = Math.max(120, pageHeight - topMargin - bottomMargin);
+    const H = pxForCssLength('297mm');
+    const mt = pxForCssLength((margins.top || 1) + 'cm');
+    const mb = pxForCssLength((margins.bottom || 1) + 'cm');
+    const gap = PAGE_GAP_PX, period = H + gap;
+    const contentH = Math.max(120, H - mt - mb);
+    const scroller = document.scrollingElement || document.documentElement;
+    const scrollTop = scroller.scrollTop, scrollLeft = scroller.scrollLeft;
 
-    // scrollHeight incluye el padding superior/inferior del paño.
-    // Para que el aviso coincida mejor con el PDF, medimos el flujo real del contenido
-    // y marcamos el fin del área imprimible, no el borde físico de la hoja.
-    const rawHeight = Math.max(canvas.scrollHeight, canvas.getBoundingClientRect().height);
-    const contentFlowHeight = Math.max(0, rawHeight - topMargin - bottomMargin);
-    const pages = Math.max(1, Math.ceil(contentFlowHeight / printableHeight));
-    const layerHeight = Math.max(rawHeight, topMargin + pages * printableHeight + bottomMargin);
+    // Medición limpia: sin flotantes. (El alto mínimo anterior se conserva para que la página no se encoja ni salte el scroll.)
+    flow.textContent = '';
+    const tall = pageRigidTall(canvas, contentH);
 
-    layer.innerHTML = '';
-    layer.style.height = layerHeight + 'px';
-    document.getElementById('page-count-msg').textContent = '📄 ' + pages + (pages === 1 ? ' pág. A4 aprox.' : ' págs. A4 aprox.');
+    let pages = 1, lastTop = 0;
+    for (let k = 0; k < 400; k++) {
+        const ps = k * period + mt;
+        const pe = k * period + H - mb;
+        const cTop = canvas.getBoundingClientRect().top;
+        let bottom = 0, brk = null, unavoidable = false, headTop = null;
+        for (const el of canvas.children) {
+            const r = el.getBoundingClientRect();
+            if (!r.width && !r.height) continue;
+            const top = r.top - cTop, bot = r.bottom - cTop;
+            bottom = Math.max(bottom, bot);
+            if (!brk && el.classList.contains('manual-page-break') && top >= ps - 1 && top <= pe + 1) {
+                brk = (bot + (parseFloat(getComputedStyle(el).marginBottom) || 0));
+            }
+            if (headTop === null && /^H[1-6]$/.test(el.tagName) && top > ps + 1 && bot <= pe + 0.5 && el.nextElementSibling && !el.nextElementSibling.classList.contains('manual-page-break')) {
+                // título al pie de la hoja sin lugar para un renglón del texto que le sigue: baja con él
+                const lh = parseFloat(getComputedStyle(el.nextElementSibling).lineHeight) || 24;
+                if (pe - bot < lh - 0.5) headTop = top;
+            }
+        }
+        for (const el of tall) {
+            const r = el.getBoundingClientRect();
+            const top = r.top - cTop, bot = r.bottom - cTop;
+            if (top < pe - 0.5 && bot > pe + 0.5) {
+                const pg = Math.max(0, Math.floor((top - mt + 1) / period));
+                if (top - (pg * period + mt) <= 1.5) unavoidable = true; // ya está arriba de una hoja y no entra: se deja correr
+            }
+        }
+        let zoneTop = null;
+        if (brk !== null) zoneTop = Math.min(brk, pe);
+        else if (bottom > pe + 0.5) { if (!unavoidable) zoneTop = headTop !== null ? Math.min(pe, headTop) : pe; }
+        else { pages = k + 1; break; }
 
-    for (let i = 1; i < pages; i++) {
-        const writableEnd = topMargin + (i * printableHeight);
-        const marker = document.createElement('div');
-        marker.className = 'page-marker';
-        marker.style.top = writableEnd + 'px';
-        marker.innerHTML = `<span>Fin pág. ${i} · margen inf. ${margins.bottom} cm</span>`;
-        layer.appendChild(marker);
-
-        const physical = document.createElement('div');
-        physical.className = 'page-physical-marker';
-        physical.style.top = (writableEnd + bottomMargin) + 'px';
-        physical.innerHTML = `<span>Corte A4</span>`;
-        layer.appendChild(physical);
+        if (zoneTop !== null) {
+            const nextStart = (k + 1) * period + mt;
+            // El margen de un flotante también bloquea el texto, así que se lo ubica con un separador en el flujo
+            // (el contenedor mide 0 de alto, por lo que el contenido editable no se desplaza).
+            const sp = document.createElement('div');
+            sp.style.height = Math.max(0, zoneTop - lastTop) + 'px';
+            const f = document.createElement('div');
+            f.className = 'page-float';
+            f.style.height = Math.max(0, nextStart - zoneTop) + 'px';
+            flow.append(sp, f);
+            lastTop = zoneTop;
+        }
+        pages = k + 2;
     }
+
+    const total = pages * H + (pages - 1) * gap;
+    canvas.style.minHeight = total + 'px';
+    layer.style.height = total + 'px';
+    let sheets = '';
+    for (let i = 0; i < pages; i++) {
+        sheets += `<div class="page-sheet" style="top:${i * period}px;height:${H}px"><span class="page-sheet-num">${i + 1} / ${pages}</span></div>`;
+    }
+    layer.innerHTML = sheets;
+    pageLayout = {pages, period, base: 0};
+    scroller.scrollTop = scrollTop; scroller.scrollLeft = scrollLeft;
+    updatePageIndicator();
+}
+function updatePageIndicator(){
+    const msg = document.getElementById('page-count-msg');
+    if (!msg) return;
+    const {pages, period} = pageLayout;
+    let cur = null;
+    const canvas = document.getElementById('doc-canvas');
+    const sel = window.getSelection();
+    if (period && sel && sel.rangeCount && canvas.contains(sel.anchorNode)) {
+        const range = sel.getRangeAt(0);
+        let rect = range.getClientRects()[0];
+        if (!rect || (!rect.height && !rect.width)) {
+            const n = range.startContainer;
+            const el = n.nodeType === 1 ? n : n.parentElement;
+            rect = el ? el.getBoundingClientRect() : null;
+        }
+        if (rect) {
+            const y = rect.top - canvas.getBoundingClientRect().top + 1;
+            cur = Math.min(pages, Math.max(1, Math.floor(y / period) + 1));
+        }
+    }
+    msg.textContent = cur ? `📄 Página ${cur} de ${pages}` : `📄 ${pages} ${pages === 1 ? 'página' : 'páginas'} A4`;
+}
+let pageIndicatorFrame = 0;
+function updatePageIndicatorSoon(){
+    if (pageIndicatorFrame) return;
+    pageIndicatorFrame = requestAnimationFrame(() => { pageIndicatorFrame = 0; updatePageIndicator(); });
 }
 
 /* Estado */
